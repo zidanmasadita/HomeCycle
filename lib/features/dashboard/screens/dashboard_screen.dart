@@ -7,8 +7,8 @@ class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text(DashboardScreen.tr())),
-      body: const Center(child: Text(DashboardScreen Placeholder.tr())),
+      appBar: AppBar(title: Text('DashboardScreen'.tr())),
+      body: Center(child: Text('DashboardScreen Placeholder'.tr())),
     );
   }
 }

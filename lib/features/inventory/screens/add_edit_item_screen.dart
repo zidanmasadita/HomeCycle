@@ -7,8 +7,8 @@ class AddEditItemScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text(AddEditItemScreen.tr())),
-      body: const Center(child: Text(AddEditItemScreen Placeholder.tr())),
+      appBar: AppBar(title: Text('AddEditItemScreen'.tr())),
+      body: Center(child: Text('AddEditItemScreen Placeholder'.tr())),
     );
   }
 }

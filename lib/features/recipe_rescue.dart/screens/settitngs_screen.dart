@@ -7,8 +7,8 @@ class SettitngsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text(SettitngsScreen.tr())),
-      body: const Center(child: Text(SettitngsScreen Placeholder.tr())),
+      appBar: AppBar(title: Text('SettitngsScreen'.tr())),
+      body: Center(child: Text('SettitngsScreen Placeholder'.tr())),
     );
   }
 }

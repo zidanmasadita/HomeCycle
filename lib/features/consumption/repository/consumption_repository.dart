@@ -23,8 +23,7 @@ class ConsumptionRepository {
       var query = _client
           .from(_table)
           .select()
-          .eq('user_id', userId)
-          .order('logged_at', ascending: false);
+          .eq('user_id', userId);
       
       if (from != null) {
         query = query.gte('logged_at', from.toIso8601String());
@@ -33,7 +32,7 @@ class ConsumptionRepository {
         query = query.lte('logged_at', to.toIso8601String());
       }
       
-      final response = await query;
+      final response = await query.order('logged_at', ascending: false);
       return (response as List<dynamic>)
           .map((json) => ConsumptionLogModel.fromJson(json as Map<String, dynamic>))
           .toList();

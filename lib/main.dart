@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 
 import 'data/remote/supabase_service.dart';
 import 'data/remote/tflite_service.dart';
@@ -105,6 +107,11 @@ class HomeCycleApp extends StatelessWidget {
             locale: context.locale,
             initialRoute: AppRoutes.splash,
             onGenerateRoute: RouteGenerator.generateRoute,
+            theme: ThemeData(
+              textTheme: GoogleFonts.poppinsTextTheme(
+                Theme.of(context).textTheme,
+              ),
+            ),
           );
         },
       ),

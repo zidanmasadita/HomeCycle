@@ -7,8 +7,8 @@ class ItemDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text(ItemDetailScreen.tr())),
-      body: const Center(child: Text(ItemDetailScreen Placeholder.tr())),
+      appBar: AppBar(title: Text('ItemDetailScreen'.tr())),
+      body: Center(child: Text('ItemDetailScreen Placeholder'.tr())),
     );
   }
 }

@@ -7,8 +7,8 @@ class ImpactDashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text(ImpactDashboardScreen.tr())),
-      body: const Center(child: Text(ImpactDashboardScreen Placeholder.tr())),
+      appBar: AppBar(title: Text('ImpactDashboardScreen'.tr())),
+      body: Center(child: Text('ImpactDashboardScreen Placeholder'.tr())),
     );
   }
 }

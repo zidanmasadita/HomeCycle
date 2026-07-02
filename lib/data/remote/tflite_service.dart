@@ -36,7 +36,7 @@ class TFLiteService {
       image,
       width: 224,
       height: 224,
-      interpolation: img.Interpolation.lanczos,
+      interpolation: img.Interpolation.linear,
     );
 
     // Convert to Float32List and normalize to [-1, 1] using (value / 127.5) - 1.0

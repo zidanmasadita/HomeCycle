@@ -7,8 +7,8 @@ class ScanResultScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text(ScanResultScreen.tr())),
-      body: const Center(child: Text(ScanResultScreen Placeholder.tr())),
+      appBar: AppBar(title: Text('ScanResultScreen'.tr())),
+      body: Center(child: Text('ScanResultScreen Placeholder'.tr())),
     );
   }
 }
