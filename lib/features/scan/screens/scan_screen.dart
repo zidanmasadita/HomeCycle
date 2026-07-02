@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class ScanScreen extends StatelessWidget {
@@ -6,9 +7,10 @@ class ScanScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('ScanScreen')),
-      body: const Center(child: Text('ScanScreen Placeholder')),
+      appBar: AppBar(title: const Text(ScanScreen.tr())),
+      body: const Center(child: Text(ScanScreen Placeholder.tr())),
     );
   }
 }
+
 

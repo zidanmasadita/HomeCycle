@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -6,9 +7,10 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('ProfileScreen')),
-      body: const Center(child: Text('ProfileScreen Placeholder')),
+      appBar: AppBar(title: const Text(ProfileScreen.tr())),
+      body: const Center(child: Text(ProfileScreen Placeholder.tr())),
     );
   }
 }
+
 

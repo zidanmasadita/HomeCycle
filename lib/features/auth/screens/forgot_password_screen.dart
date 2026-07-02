@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class ForgotPasswordScreen extends StatelessWidget {
@@ -6,9 +7,10 @@ class ForgotPasswordScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('ForgotPasswordScreen')),
-      body: const Center(child: Text('ForgotPasswordScreen Placeholder')),
+      appBar: AppBar(title: const Text(ForgotPasswordScreen.tr())),
+      body: const Center(child: Text(ForgotPasswordScreen Placeholder.tr())),
     );
   }
 }
+
 

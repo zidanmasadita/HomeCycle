@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:homesikil/features/auth/provider/auth_provider.dart';
 import 'package:homesikil/routes/app_routes.dart';
@@ -38,3 +39,4 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 }
+

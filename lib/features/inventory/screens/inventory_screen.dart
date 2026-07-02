@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class InventoryScreen extends StatelessWidget {
@@ -6,9 +7,10 @@ class InventoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('InventoryScreen')),
-      body: const Center(child: Text('InventoryScreen Placeholder')),
+      appBar: AppBar(title: const Text(InventoryScreen.tr())),
+      body: const Center(child: Text(InventoryScreen Placeholder.tr())),
     );
   }
 }
+
 

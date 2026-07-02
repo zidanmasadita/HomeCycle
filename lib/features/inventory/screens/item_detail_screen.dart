@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class ItemDetailScreen extends StatelessWidget {
@@ -6,9 +7,10 @@ class ItemDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('ItemDetailScreen')),
-      body: const Center(child: Text('ItemDetailScreen Placeholder')),
+      appBar: AppBar(title: const Text(ItemDetailScreen.tr())),
+      body: const Center(child: Text(ItemDetailScreen Placeholder.tr())),
     );
   }
 }
+
 

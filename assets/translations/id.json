@@ -1,0 +1,46 @@
+{
+  "common": {
+    "save": "Simpan",
+    "cancel": "Batal",
+    "delete": "Hapus",
+    "confirm": "Konfirmasi",
+    "loading": "Memuat..."
+  },
+  "auth": {
+    "login_title": "Masuk",
+    "register_title": "Daftar",
+    "email": "Email",
+    "password": "Kata Sandi"
+  },
+  "dashboard": {
+    "title": "Beranda",
+    "expiring_soon": "Segera Kedaluwarsa",
+    "impact_summary": "Ringkasan Dampak"
+  },
+  "scan": {
+    "title": "Pindai Barang",
+    "scan_button": "Pindai Sekarang",
+    "result_fresh": "Segar",
+    "result_overripe": "Terlalu Matang"
+  },
+  "inventory": {
+    "title": "Inventaris",
+    "empty_state": "Inventaris Anda kosong.",
+    "expired_in": "Kedaluwarsa dalam {} hari",
+    "mark_consumed": "Tandai Dikonsumsi",
+    "mark_wasted": "Tandai Terbuang"
+  },
+  "notification": {
+    "title": "Notifikasi",
+    "mark_all_read": "Tandai semua dibaca"
+  },
+  "gamification": {
+    "achievements": "Pencapaian",
+    "streak_weeks": "{} minggu berturut-turut"
+  },
+  "profile": {
+    "title": "Profil",
+    "language": "Bahasa",
+    "notification_settings": "Pengaturan Notifikasi"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "loading": "Loading..."
+  },
+  "auth": {
+    "login_title": "Login",
+    "register_title": "Register",
+    "email": "Email",
+    "password": "Password"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "expiring_soon": "Expiring Soon",
+    "impact_summary": "Impact Summary"
+  },
+  "scan": {
+    "title": "Scan Item",
+    "scan_button": "Scan Now",
+    "result_fresh": "Fresh",
+    "result_overripe": "Overripe"
+  },
+  "inventory": {
+    "title": "Inventory",
+    "empty_state": "Your inventory is empty.",
+    "expired_in": "Expires in {} days",
+    "mark_consumed": "Mark Consumed",
+    "mark_wasted": "Mark Wasted"
+  },
+  "notification": {
+    "title": "Notifications",
+    "mark_all_read": "Mark all as read"
+  },
+  "gamification": {
+    "achievements": "Achievements",
+    "streak_weeks": "{} week streak"
+  },
+  "profile": {
+    "title": "Profile",
+    "language": "Language",
+    "notification_settings": "Notification Settings"
+  }
+}
