@@ -1,0 +1,79 @@
+import 'package:homesikil/data/remote/supabase_service.dart';
+import 'package:homesikil/errors/failure.dart';
+import 'package:homesikil/features/auth/models/user_model.dart';
+
+class AuthRepository {
+  final _client = SupabaseService.client;
+
+  Future<UserModel> signUp({
+    required String email,
+    required String password,
+    required String username,
+  }) async {
+    try {
+      final response = await _client.auth.signUp(
+        email: email,
+        password: password,
+        data: {'username': username},
+      );
+      if (response.user == null) {
+        throw Exception('User tidak ditemukan setelah register');
+      }
+      return UserModel.fromSupabaseUser(response.user!);
+    } catch (e) {
+      throw Failure.fromException(e);
+    }
+  }
+
+  Future<UserModel> signIn({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final response = await _client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+      if (response.user == null) {
+        throw Exception('User tidak ditemukan setelah login');
+      }
+      return UserModel.fromSupabaseUser(response.user!);
+    } catch (e) {
+      throw Failure.fromException(e);
+    }
+  }
+
+  Future<void> signOut() async {
+    try {
+      await _client.auth.signOut();
+    } catch (e) {
+      throw Failure.fromException(e);
+    }
+  }
+
+  Future<void> resetPassword({required String email}) async {
+    try {
+      await _client.auth.resetPasswordForEmail(email);
+    } catch (e) {
+      throw Failure.fromException(e);
+    }
+  }
+
+  UserModel? getCurrentUser() {
+    final user = SupabaseService.currentUser;
+    if (user != null) {
+      return UserModel.fromSupabaseUser(user);
+    }
+    return null;
+  }
+
+  Stream<UserModel?> get authStateChanges {
+    return _client.auth.onAuthStateChange.map((authState) {
+      final user = authState.session?.user;
+      if (user != null) {
+        return UserModel.fromSupabaseUser(user);
+      }
+      return null;
+    });
+  }
+}
