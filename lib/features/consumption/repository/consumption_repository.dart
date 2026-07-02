@@ -41,4 +41,47 @@ class ConsumptionRepository {
       throw Failure.fromException(e);
     }
   }
+
+  Future<int> getCurrentStreakWeeks() async {
+    try {
+      final logs = await getLogsByUser();
+      if (logs.isEmpty) return 0;
+      
+      int streak = 0;
+      DateTime now = DateTime.now();
+      DateTime currentWeekStart = now.subtract(Duration(days: now.weekday - 1));
+      currentWeekStart = DateTime(currentWeekStart.year, currentWeekStart.month, currentWeekStart.day);
+
+      Map<int, bool> weekHasWaste = {};
+      
+      for (var log in logs) {
+        final logDate = log.loggedAt;
+        final difference = currentWeekStart.difference(DateTime(logDate.year, logDate.month, logDate.day)).inDays;
+        
+        int weekIndex = difference <= 0 ? 0 : (difference / 7).ceil();
+        
+        if (log.action == 'wasted') {
+          weekHasWaste[weekIndex] = true;
+        } else {
+          weekHasWaste.putIfAbsent(weekIndex, () => false);
+        }
+      }
+
+      for (int i = 0; i < 520; i++) {
+        if (weekHasWaste.containsKey(i)) {
+          if (weekHasWaste[i] == true) {
+            break;
+          } else {
+            streak++;
+          }
+        } else {
+          if (i == 0) continue;
+          break;
+        }
+      }
+      return streak;
+    } catch (e) {
+      return 0;
+    }
+  }
 }
