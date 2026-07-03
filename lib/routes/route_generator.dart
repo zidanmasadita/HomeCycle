@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:homesikil/routes/app_routes.dart';
 import 'package:homesikil/features/auth/screens/login_screen.dart';
 import 'package:homesikil/features/auth/screens/register_screen.dart';
-import 'package:homesikil/features/dashboard/screens/dashboard_screen.dart';
+import 'package:homesikil/routes/main_wrapper.dart';
 import 'package:homesikil/features/gamification/screens/impact_dashboard_screen.dart';
 import 'package:homesikil/features/inventory/screens/add_edit_item_screen.dart';
 import 'package:homesikil/features/inventory/screens/inventory_screen.dart';
@@ -28,7 +28,7 @@ class RouteGenerator {
       case AppRoutes.onboarding:
         return MaterialPageRoute(builder: (_) => const OnboardingScreen());
       case AppRoutes.dashboard:
-        return MaterialPageRoute(builder: (_) => const DashboardScreen());
+        return MaterialPageRoute(builder: (_) => const MainWrapper());
       case AppRoutes.inventory:
         return MaterialPageRoute(builder: (_) => const InventoryScreen());
       case AppRoutes.itemDetail:

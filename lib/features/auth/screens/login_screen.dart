@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:homesikil/routes/main_wrapper.dart';
 import 'register_screen.dart';
+import 'package:homesikil/core/constants/app_colors.dart';
+import 'package:homesikil/core/constants/app_assets.dart';
+import 'package:homesikil/core/constants/app_dimens.dart';
+import 'package:homesikil/core/theme/app_text_styles.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -26,18 +31,17 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Row(
                 children: [
                   Image.asset(
-                    'assets/images/icons/Logo.png',
+                    AppAssets.logo,
                     height: 40,
                     errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.eco, color: Color(0xFF73A942), size: 40),
+                        const Icon(Icons.eco, color: AppColors.primary, size: 40),
                   ),
                   const SizedBox(width: 10),
-                  const Text(
+                  Text(
                     'HomeCycle',
-                    style: TextStyle(
-                      fontSize: 24,
+                    style: AppTextStyles.heading.copyWith(
                       fontWeight: FontWeight.w900,
-                      color: Color(0xFF73A942),
+                      color: AppColors.primary,
                     ),
                   ),
                 ],
@@ -50,24 +54,19 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Padding(
-                      padding: EdgeInsets.only(bottom: 40.0),
+                      padding: const EdgeInsets.only(bottom: 40.0),
                       child: Text(
                         "Welcome\nback, Mate!",
-                        style: TextStyle(
-                          fontSize: 34,
-                          fontWeight: FontWeight.w600,
-                          height: 1.2,
-                          color: Colors.black87,
-                        ),
+                        style: AppTextStyles.displayLarge,
                       ),
                     ),
                   ),
                   Transform.translate(
                     offset: const Offset(0, 45),
                     child: Image.asset(
-                      'assets/images/mascots/Mascot2.png', 
+                      AppAssets.mascot2, 
                       height: 250,
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) =>
@@ -83,23 +82,21 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Container(
                 width: double.infinity,
                 decoration: const BoxDecoration(
-                  color: Color(0xFF73A942),
+                  color: AppColors.primary,
                   borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(30),
-                    topRight: Radius.circular(30),
+                    topLeft: Radius.circular(AppDimens.radiusXL),
+                    topRight: Radius.circular(AppDimens.radiusXL),
                   ),
                 ),
                 child: Column(
                   children: [
-                    // Green Header Text
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 15.0),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 15.0),
                       child: Text(
                         'Login',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: AppTextStyles.title.copyWith(
                           color: Colors.white,
-                          fontSize: 22,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -111,11 +108,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         decoration: const BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(30),
-                            topRight: Radius.circular(30),
+                            topLeft: Radius.circular(AppDimens.radiusXL),
+                            topRight: Radius.circular(AppDimens.radiusXL),
                           ),
                         ),
                         child: SingleChildScrollView(
+                          physics: const NeverScrollableScrollPhysics(),
                           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 30.0),
                           child: Column(
                             children: [
@@ -157,8 +155,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                               _rememberMe = val;
                                             });
                                           },
+                                          trackOutlineColor: WidgetStatePropertyAll(AppColors.border),
                                           activeColor: Colors.white,
-                                          activeTrackColor: const Color(0xFF73A942),
+                                          activeTrackColor: AppColors.primary,
                                           inactiveThumbColor: Colors.white,
                                           inactiveTrackColor: Colors.grey.shade300,
                                         ),
@@ -171,13 +170,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                   GestureDetector(
                                     onTap: () {
-                                      // Navigate to forgot password
                                     },
                                     child: const Text(
                                       'Forgot Password',
                                       style: TextStyle(
                                         fontSize: 14,
-                                        color: Color(0xFF73A942),
+                                        color: AppColors.primary,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -192,11 +190,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                 width: double.infinity,
                                 height: 55,
                                 child: ElevatedButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const MainWrapper(),
+                                      ),
+                                    );
+                                  },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF73A942),
+                                    backgroundColor: AppColors.primary,
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(30),
+                                      borderRadius: BorderRadius.circular(AppDimens.radiusXL),
                                     ),
                                     elevation: 0,
                                   ),
@@ -233,7 +238,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     child: const Text(
                                       'Register',
                                       style: TextStyle(
-                                        color: Color(0xFF73A942),
+                                        color: AppColors.primary,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),

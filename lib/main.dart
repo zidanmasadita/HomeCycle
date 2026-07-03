@@ -8,6 +8,7 @@ import 'data/remote/supabase_service.dart';
 import 'data/remote/tflite_service.dart';
 import 'routes/app_routes.dart';
 import 'routes/route_generator.dart';
+import 'core/theme/app_theme.dart';
 
 // Repositories
 import 'features/auth/repository/auth_repository.dart';
@@ -107,11 +108,7 @@ class HomeCycleApp extends StatelessWidget {
             locale: context.locale,
             initialRoute: AppRoutes.splash,
             onGenerateRoute: RouteGenerator.generateRoute,
-            theme: ThemeData(
-              textTheme: GoogleFonts.poppinsTextTheme(
-                Theme.of(context).textTheme,
-              ),
-            ),
+            theme: AppTheme.lightTheme,
           );
         },
       ),

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
+import 'package:homesikil/core/constants/app_colors.dart';
+import 'package:homesikil/core/constants/app_assets.dart';
+import 'package:homesikil/core/constants/app_dimens.dart';
+import 'package:homesikil/core/theme/app_text_styles.dart';
 
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({super.key});
@@ -19,18 +23,17 @@ class RegisterScreen extends StatelessWidget {
               child: Row(
                 children: [
                   Image.asset(
-                    'assets/images/icons/Logo.png',
+                    AppAssets.logo,
                     height: 40,
                     errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.eco, color: Color(0xFF73A942), size: 40),
+                        const Icon(Icons.eco, color: AppColors.primary, size: 40),
                   ),
                   const SizedBox(width: 10),
-                  const Text(
+                  Text(
                     'HomeCycle',
-                    style: TextStyle(
-                      fontSize: 24,
+                    style: AppTextStyles.heading.copyWith(
                       fontWeight: FontWeight.w900,
-                      color: Color(0xFF73A942),
+                      color: AppColors.primary,
                     ),
                   ),
                 ],
@@ -43,24 +46,19 @@ class RegisterScreen extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Padding(
-                      padding: EdgeInsets.only(bottom: 40.0),
+                      padding: const EdgeInsets.only(bottom: 40.0),
                       child: Text(
                         "Let's get \nstarted,\nMate!",
-                        style: TextStyle(
-                          fontSize: 34,
-                          fontWeight: FontWeight.w600,
-                          height: 1.2,
-                          color: Colors.black87,
-                        ),
+                        style: AppTextStyles.displayLarge,
                       ),
                     ),
                   ),
                   Transform.translate(
                     offset: const Offset(0, 45),
                     child: Image.asset(
-                      'assets/images/mascots/Mascot4.png', 
+                      AppAssets.mascot4, 
                       height: 250,
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) =>
@@ -76,23 +74,22 @@ class RegisterScreen extends StatelessWidget {
               child: Container(
                 width: double.infinity,
                 decoration: const BoxDecoration(
-                  color: Color(0xFF73A942),
+                  color: AppColors.primary,
                   borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(30),
-                    topRight: Radius.circular(30),
+                    topLeft: Radius.circular(AppDimens.radiusXL),
+                    topRight: Radius.circular(AppDimens.radiusXL),
                   ),
                 ),
                 child: Column(
                   children: [
                     // Green Header Text
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 15.0),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 15.0),
                       child: Text(
                         'Register',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: AppTextStyles.title.copyWith(
                           color: Colors.white,
-                          fontSize: 22,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -104,11 +101,12 @@ class RegisterScreen extends StatelessWidget {
                         decoration: const BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(30),
-                            topRight: Radius.circular(30),
+                            topLeft: Radius.circular(AppDimens.radiusXL),
+                            topRight: Radius.circular(AppDimens.radiusXL),
                           ),
                         ),
                         child: SingleChildScrollView(
+                          physics: const NeverScrollableScrollPhysics(),
                           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 30.0),
                           child: Column(
                             children: [
@@ -145,9 +143,9 @@ class RegisterScreen extends StatelessWidget {
                             child: ElevatedButton(
                               onPressed: () {},
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF73A942),
+                                backgroundColor: AppColors.primary,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
+                                  borderRadius: BorderRadius.circular(AppDimens.radiusXL),
                                 ),
                                 elevation: 0,
                               ),
@@ -184,7 +182,7 @@ class RegisterScreen extends StatelessWidget {
                                 child: const Text(
                                   'Login',
                                   style: TextStyle(
-                                    color: Color(0xFF73A942),
+                                    color: AppColors.primary,
                                     fontWeight: FontWeight.bold,
                                     decoration: TextDecoration.underline,
                                   ),

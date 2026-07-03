@@ -17,7 +17,7 @@ class LocalNotificationHelper {
       iOS: iosSettings,
     );
 
-    await _notificationsPlugin.initialize(initSettings);
+    await _notificationsPlugin.initialize(settings: initSettings);
 
     await _notificationsPlugin
         .resolvePlatformSpecificImplementation<
@@ -45,10 +45,10 @@ class LocalNotificationHelper {
     final id = (title + body).hashCode;
 
     await _notificationsPlugin.show(
-      id,
-      title,
-      body,
-      notificationDetails,
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: notificationDetails,
     );
   }
 }
