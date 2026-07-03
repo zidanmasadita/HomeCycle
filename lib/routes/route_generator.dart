@@ -11,7 +11,7 @@ import 'package:homesikil/features/notification/screens/notification_screen.dart
 import 'package:homesikil/features/onboarding/screens/onboarding_screen.dart';
 import 'package:homesikil/features/recipe_rescue.dart/screens/language_settings_screen.dart';
 import 'package:homesikil/features/recipe_rescue.dart/screens/profile_screen.dart';
-import 'package:homesikil/features/recipe_rescue.dart/screens/settitngs_screen.dart';
+import 'package:homesikil/features/recipe_rescue.dart/screens/settings_screen.dart';
 import 'package:homesikil/features/scan/screens/scan_result_screen.dart';
 import 'package:homesikil/features/scan/screens/scan_screen.dart';
 import 'package:homesikil/splash_screen.dart';
@@ -46,7 +46,7 @@ class RouteGenerator {
       case AppRoutes.profile:
         return MaterialPageRoute(builder: (_) => const ProfileScreen());
       case AppRoutes.settings:
-        return MaterialPageRoute(builder: (_) => const SettitngsScreen());
+        return MaterialPageRoute(builder: (_) => const SettingsScreen());
       case AppRoutes.languageSettings:
         return MaterialPageRoute(builder: (_) => const LanguageSettingsScreen());
       default:

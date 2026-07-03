@@ -5,6 +5,7 @@ import 'package:homesikil/core/constants/app_assets.dart';
 import 'package:homesikil/core/theme/app_text_styles.dart';
 import 'package:homesikil/features/dashboard/widgets/quick_stats_card.dart';
 import 'package:homesikil/features/dashboard/widgets/expiring_soon_card.dart';
+import 'package:homesikil/routes/app_routes.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -50,7 +51,9 @@ class DashboardScreen extends StatelessWidget {
                       ),
                       child: IconButton(
                         icon: const Icon(Icons.notifications_none, color: AppColors.primary),
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.pushNamed(context, AppRoutes.notification);
+                        },
                         constraints: const BoxConstraints(),
                         padding: const EdgeInsets.all(8),
                       ),

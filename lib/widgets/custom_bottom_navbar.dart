@@ -35,18 +35,33 @@ class CustomBottomNavbar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           _buildNavItem(0, Icons.home_outlined, Icons.home, 'Home'),
-          _buildNavItem(1, Icons.inventory_2_outlined, Icons.inventory, 'Inventory'),
+          _buildNavItem(
+            1,
+            Icons.inventory_2_outlined,
+            Icons.inventory,
+            'Inventory',
+          ),
           _buildNavItem(2, Icons.camera_alt_outlined, Icons.camera_alt, 'Scan'),
-          _buildNavItem(3, Icons.notifications_none_outlined, Icons.notifications, 'Notice'), // Shortened for space
+          _buildNavItem(
+            3,
+            Icons.notifications_none_outlined,
+            Icons.notifications,
+            'Notification',
+          ),
           _buildNavItem(4, Icons.person_outline, Icons.person, 'Profile'),
         ],
       ),
     );
   }
 
-  Widget _buildNavItem(int index, IconData outlineIcon, IconData solidIcon, String label) {
+  Widget _buildNavItem(
+    int index,
+    IconData outlineIcon,
+    IconData solidIcon,
+    String label,
+  ) {
     final isSelected = currentIndex == index;
-    
+
     return GestureDetector(
       onTap: () => onTap(index),
       behavior: HitTestBehavior.opaque,
