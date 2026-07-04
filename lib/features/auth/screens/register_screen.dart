@@ -1,12 +1,104 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'login_screen.dart';
+import 'package:provider/provider.dart';
 import 'package:homesikil/core/constants/app_colors.dart';
 import 'package:homesikil/core/constants/app_assets.dart';
 import 'package:homesikil/core/constants/app_dimens.dart';
 import 'package:homesikil/core/theme/app_text_styles.dart';
+import 'package:homesikil/core/utils/app_snackbar.dart';
+import 'package:homesikil/core/utils/validators.dart';
+import 'package:homesikil/features/auth/provider/auth_provider.dart';
+import 'package:homesikil/routes/app_routes.dart';
+import 'login_screen.dart';
 
-class RegisterScreen extends StatelessWidget {
+class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
+
+  @override
+  State<RegisterScreen> createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends State<RegisterScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _passwordFocusNode = FocusNode();
+  bool _obscurePassword = true;
+  bool _showPasswordPolicy = false;
+  Timer? _cooldownTimer;
+  int _cooldownSeconds = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _passwordFocusNode.addListener(() {
+      setState(() => _showPasswordPolicy = _passwordFocusNode.hasFocus);
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AuthProvider>().addListener(_onAuthChanged);
+    });
+  }
+
+  void _onAuthChanged() {
+    if (!mounted) return;
+    final provider = context.read<AuthProvider>();
+    if (provider.status == AuthStatus.success && provider.currentUser != null) {
+      Navigator.pushNamedAndRemoveUntil(context, AppRoutes.splash, (_) => false);
+    }
+  }
+
+  @override
+  void dispose() {
+    context.read<AuthProvider>().removeListener(_onAuthChanged);
+    _usernameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _passwordFocusNode.dispose();
+    _cooldownTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startCooldownTimer(Duration cooldown) {
+    _cooldownTimer?.cancel();
+    setState(() => _cooldownSeconds = cooldown.inSeconds);
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) {
+        t.cancel();
+        return;
+      }
+      setState(() => _cooldownSeconds--);
+      if (_cooldownSeconds <= 0) t.cancel();
+    });
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final provider = context.read<AuthProvider>();
+    await provider.signUp(
+      email: _emailController.text,
+      password: _passwordController.text,
+      username: _usernameController.text,
+    );
+
+    if (!mounted) return;
+
+    final updated = context.read<AuthProvider>();
+    if (updated.status == AuthStatus.success) {
+      if (updated.currentUser == null) {
+        AppSnackbar.showSuccess('Registrasi berhasil! Silakan cek email Anda untuk verifikasi.');
+        Navigator.pop(context);
+      } else {
+        Navigator.pushNamedAndRemoveUntil(context, AppRoutes.splash, (_) => false);
+      }
+    } else {
+      if (updated.registerCooldown > Duration.zero) {
+        _startCooldownTimer(updated.registerCooldown);
+      }
+      AppSnackbar.showError(updated.errorMessage ?? 'Registration failed');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +109,7 @@ class RegisterScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Logo and Title
+            // Logo
             Padding(
               padding: const EdgeInsets.only(left: 20.0, top: 10.0),
               child: Row(
@@ -39,7 +131,7 @@ class RegisterScreen extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             // Welcome Text and Mascot
             Padding(
               padding: const EdgeInsets.only(left: 30.0, right: 0.0, top: 10.0),
@@ -49,16 +141,13 @@ class RegisterScreen extends StatelessWidget {
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 40.0),
-                      child: Text(
-                        "Let's get \nstarted,\nMate!",
-                        style: AppTextStyles.displayLarge,
-                      ),
+                      child: Text("Let's get \nstarted,\nMate!", style: AppTextStyles.displayLarge),
                     ),
                   ),
                   Transform.translate(
                     offset: const Offset(0, 45),
                     child: Image.asset(
-                      AppAssets.mascot4, 
+                      AppAssets.mascot4,
                       height: 250,
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) =>
@@ -68,7 +157,7 @@ class RegisterScreen extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             // Bottom Sheet Area
             Expanded(
               child: Container(
@@ -82,7 +171,6 @@ class RegisterScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    // Green Header Text
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 15.0),
                       child: Text(
@@ -107,148 +195,228 @@ class RegisterScreen extends StatelessWidget {
                         ),
                         child: SingleChildScrollView(
                           physics: const NeverScrollableScrollPhysics(),
-                          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 30.0),
-                          child: Column(
-                            children: [
-                          // Social Buttons
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              _socialButton(Icons.facebook, Colors.blue),
-                              const SizedBox(width: 20),
-                              _socialButton(null, null, isGoogle: true),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                          const Text(
-                            'Or use your email account',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          
-                          // Form Fields
-                          _textField('Username', icon: Icons.person_outline),
-                          _textField('Email', icon: Icons.email_outlined),
-                          _textField('Password', isPassword: true, icon: Icons.lock_outline),
-                          
-                          const SizedBox(height: 15),
-                          
-                          // Register Button
-                          SizedBox(
-                            width: double.infinity,
-                            height: 55,
-                            child: ElevatedButton(
-                              onPressed: () {},
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(AppDimens.radiusXL),
-                                ),
-                                elevation: 0,
-                              ),
-                              child: const Text(
-                                'Register',
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                          
-                          const SizedBox(height: 20),
-                          
-                          // Login Link
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text(
-                                'Already have an account? ',
-                                style: TextStyle(color: Colors.black87),
-                              ),
-                              GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const LoginScreen(),
+                          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              children: [
+                                // Social Buttons
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    _socialButton(
+                                      null,
+                                      null,
+                                      isDiscord: true,
+                                      onTap: () => context.read<AuthProvider>().signInWithDiscord(),
                                     ),
-                                  );
-                                },
-                                child: const Text(
-                                  'Login',
-                                  style: TextStyle(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.bold,
-                                    decoration: TextDecoration.underline,
+                                    const SizedBox(width: 20),
+                                    _socialButton(
+                                      null,
+                                      null,
+                                      isGoogle: true,
+                                      onTap: () => context.read<AuthProvider>().signInWithGoogle(),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                const Text(
+                                  'Or use your email account',
+                                  style: TextStyle(fontSize: 14, color: Colors.black87),
+                                ),
+                                const SizedBox(height: 12),
+
+                                // Username
+                                _buildField(
+                                  controller: _usernameController,
+                                  hint: 'Username',
+                                  icon: Icons.person_outline,
+                                  autofillHints: const [AutofillHints.username],
+                                  validator: validateUsername,
+                                ),
+
+                                // Email
+                                _buildField(
+                                  controller: _emailController,
+                                  hint: 'Email',
+                                  icon: Icons.email_outlined,
+                                  keyboardType: TextInputType.emailAddress,
+                                  autofillHints: const [AutofillHints.email],
+                                  validator: validateEmail,
+                                ),
+
+                                // Password + inline policy hint
+                                _buildField(
+                                  controller: _passwordController,
+                                  hint: 'Password',
+                                  icon: Icons.lock_outline,
+                                  obscure: _obscurePassword,
+                                  focusNode: _passwordFocusNode,
+                                  autofillHints: const [AutofillHints.newPassword],
+                                  validator: validatePassword,
+                                  bottomMargin: 0,
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                      color: Colors.grey.shade500,
+                                    ),
+                                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                                   ),
                                 ),
-                              ),
-                            ],
+                                // Password policy — shown only when field is focused
+                                AnimatedCrossFade(
+                                  duration: const Duration(milliseconds: 200),
+                                  crossFadeState: _showPasswordPolicy
+                                      ? CrossFadeState.showFirst
+                                      : CrossFadeState.showSecond,
+                                  firstChild: Padding(
+                                    padding: const EdgeInsets.only(left: 14, top: 6, bottom: 4),
+                                    child: Text(
+                                      'Min. 8 chars, at least one letter and one number',
+                                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                    ),
+                                  ),
+                                  secondChild: const SizedBox(width: double.infinity),
+                                ),
+
+                                const SizedBox(height: 14),
+
+                                // Register Button
+                                Consumer<AuthProvider>(
+                                  builder: (context, auth, _) {
+                                    final isCoolingDown = _cooldownSeconds > 0;
+                                    final isDisabled = auth.isLoading || isCoolingDown;
+                                    return SizedBox(
+                                      width: double.infinity,
+                                      height: 50,
+                                      child: ElevatedButton(
+                                        onPressed: isDisabled ? null : _submit,
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppColors.primary,
+                                          disabledBackgroundColor: Colors.grey.shade400,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(AppDimens.radiusXL),
+                                          ),
+                                          elevation: 0,
+                                        ),
+                                        child: auth.isLoading
+                                            ? const SizedBox(
+                                                height: 24,
+                                                width: 24,
+                                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                              )
+                                            : Text(
+                                                isCoolingDown
+                                                    ? 'Try again in ${_cooldownSeconds}s'
+                                                    : 'Register',
+                                                style: const TextStyle(
+                                                  fontSize: 22,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                      ),
+                                    );
+                                  },
+                                ),
+
+                                const SizedBox(height: 12),
+
+                                // Login Link
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Text(
+                                      'Already have an account? ',
+                                      style: TextStyle(color: Colors.black87),
+                                    ),
+                                    GestureDetector(
+                                      onTap: () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                                      ),
+                                      child: const Text(
+                                        'Login',
+                                        style: TextStyle(
+                                          color: AppColors.primary,
+                                          fontWeight: FontWeight.bold,
+                                          decoration: TextDecoration.underline,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
-      ],
+          ],
         ),
       ),
     );
   }
 
-  Widget _socialButton(IconData? icon, Color? color, {bool isGoogle = false}) {
-    return Container(
-      width: 60,
-      height: 60,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white,
-        border: Border.all(color: Colors.grey.shade300, width: 1.5),
-      ),
-      child: Center(
-        child: isGoogle
-            ? _googleIcon()
-            : Icon(icon, color: color, size: 36),
-      ),
-    );
-  }
-
-  Widget _googleIcon() {
-    // A simple representation of the Google G since we don't have the asset
-    return const Text(
-      'G',
-      style: TextStyle(
-        fontSize: 32,
-        fontWeight: FontWeight.bold,
-        color: Colors.red,
+  Widget _socialButton(IconData? icon, Color? color, {bool isGoogle = false, bool isDiscord = false, VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white,
+          border: Border.all(color: Colors.grey.shade300, width: 1.5),
+        ),
+        child: Center(
+          child: isGoogle
+              ? const Text('G', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.red))
+              : isDiscord
+                  ? const Text('D', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.indigo))
+                  : Icon(icon, color: color, size: 36),
+        ),
       ),
     );
   }
 
-  Widget _textField(String hint, {bool isPassword = false, IconData? icon}) {
+  Widget _buildField({
+    required TextEditingController controller,
+    required String hint,
+    IconData? icon,
+    bool obscure = false,
+    TextInputType? keyboardType,
+    Iterable<String>? autofillHints,
+    String? Function(String?)? validator,
+    double bottomMargin = 16,
+    Widget? suffixIcon,
+    FocusNode? focusNode,
+  }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: EdgeInsets.only(bottom: bottomMargin),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
         border: Border.all(color: Colors.grey.shade400, width: 1),
       ),
-      child: TextField(
-        obscureText: isPassword,
+      child: TextFormField(
+        controller: controller,
+        focusNode: focusNode,
+        obscureText: obscure,
+        keyboardType: keyboardType,
+        autofillHints: autofillHints,
+        validator: validator,
         decoration: InputDecoration(
           prefixIcon: icon != null ? Icon(icon, color: Colors.grey.shade500) : null,
+          suffixIcon: suffixIcon,
           hintText: hint,
           hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 16),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          errorStyle: const TextStyle(fontSize: 12),
         ),
       ),
     );

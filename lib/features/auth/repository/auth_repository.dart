@@ -1,11 +1,12 @@
 import 'package:homesikil/data/remote/supabase_service.dart';
 import 'package:homesikil/errors/failure.dart';
 import 'package:homesikil/features/auth/models/user_model.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthRepository {
   final _client = SupabaseService.client;
 
-  Future<UserModel> signUp({
+  Future<UserModel?> signUp({
     required String email,
     required String password,
     required String username,
@@ -17,8 +18,9 @@ class AuthRepository {
         data: {'username': username},
       );
       if (response.user == null) {
-        throw Exception('User tidak ditemukan setelah register');
+        throw const Failure('Registration failed. Please try again.');
       }
+      if (response.session == null) return null;
       return UserModel.fromSupabaseUser(response.user!);
     } catch (e) {
       throw Failure.fromException(e);
@@ -38,6 +40,17 @@ class AuthRepository {
         throw Exception('User tidak ditemukan setelah login');
       }
       return UserModel.fromSupabaseUser(response.user!);
+    } catch (e) {
+      throw Failure.fromException(e);
+    }
+  }
+
+  Future<void> signInWithOAuth(OAuthProvider provider) async {
+    try {
+      await _client.auth.signInWithOAuth(
+        provider,
+        redirectTo: 'homesikil://login-callback',
+      );
     } catch (e) {
       throw Failure.fromException(e);
     }

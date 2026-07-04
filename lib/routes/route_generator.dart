@@ -66,12 +66,15 @@ class RouteGenerator {
       case AppRoutes.editProfile:
         return MaterialPageRoute(builder: (_) => const EditProfileScreen());
       default:
-        return MaterialPageRoute(
-          builder: (_) => Scaffold(
-            appBar: AppBar(title: const Text('Error')),
-            body: const Center(child: Text('Route not found')),
-          ),
-        );
+        // Supabase OAuth callback route
+        if (settings.name != null && settings.name!.contains('login-callback')) {
+          return MaterialPageRoute(
+            builder: (_) => const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            ),
+          );
+        }
+        return MaterialPageRoute(builder: (_) => const SplashScreen());
     }
   }
 }

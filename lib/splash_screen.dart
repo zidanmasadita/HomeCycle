@@ -1,8 +1,8 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:homesikil/features/auth/provider/auth_provider.dart';
 import 'package:homesikil/routes/app_routes.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -21,10 +21,18 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void _checkAuthAndNavigate() async {
-    // Auth guard logic: redirect to dashboard if logged in, else login
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
+
+    if (!mounted) return;
+
     final authProvider = context.read<AuthProvider>();
     if (authProvider.currentUser != null) {
-      Navigator.of(context).pushReplacementNamed(AppRoutes.dashboard);
+      if (hasSeenOnboarding) {
+        Navigator.of(context).pushReplacementNamed(AppRoutes.dashboard);
+      } else {
+        Navigator.of(context).pushReplacementNamed(AppRoutes.onboarding);
+      }
     } else {
       Navigator.of(context).pushReplacementNamed(AppRoutes.login);
     }
