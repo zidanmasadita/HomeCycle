@@ -3,12 +3,23 @@ import 'package:homesikil/core/constants/app_colors.dart';
 import 'package:homesikil/core/constants/app_assets.dart';
 import 'package:homesikil/core/constants/app_dimens.dart';
 import 'package:homesikil/core/theme/app_text_styles.dart';
+import 'package:homesikil/features/inventory/provider/inventory_provider.dart';
+import 'package:homesikil/features/gamification/provider/gamification_provider.dart';
+import 'package:provider/provider.dart';
 
 class QuickStatsCard extends StatelessWidget {
   const QuickStatsCard({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final inventory = context.watch<InventoryProvider>();
+    final gamification = context.watch<GamificationProvider>();
+
+    final inventoryCount = inventory.inventory.length;
+    final expiringSoonCount = inventory.expiringSoonItems.length;
+    final moneySaved = gamification.impactStats.totalMoneySaved;
+    final co2Saved = gamification.impactStats.totalCo2Saved;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       decoration: BoxDecoration(
@@ -38,7 +49,7 @@ class QuickStatsCard extends StatelessWidget {
                     Expanded(
                       child: _buildStatItem(
                         title: 'Inventory',
-                        value: '12',
+                        value: '$inventoryCount',
                         subtitle: 'items',
                       ),
                     ),
@@ -46,7 +57,7 @@ class QuickStatsCard extends StatelessWidget {
                     Expanded(
                       child: _buildStatItem(
                         title: 'Expiring Soon',
-                        value: '3',
+                        value: '$expiringSoonCount',
                         subtitle: 'items',
                       ),
                     ),
@@ -67,7 +78,7 @@ class QuickStatsCard extends StatelessWidget {
                     Expanded(
                       child: _buildStatItem(
                         title: 'Saved Money',
-                        value: 'Rp 82.000',
+                        value: 'Rp ${moneySaved.toStringAsFixed(0)}',
                         iconPath: AppAssets.coin,
                       ),
                     ),
@@ -75,7 +86,7 @@ class QuickStatsCard extends StatelessWidget {
                     Expanded(
                       child: _buildStatItem(
                         title: 'CO² Saved',
-                        value: '5.2 kg',
+                        value: '${co2Saved.toStringAsFixed(1)} kg',
                         iconPath: AppAssets.leaf,
                         showInfo: true,
                       ),

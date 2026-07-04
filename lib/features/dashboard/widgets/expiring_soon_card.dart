@@ -43,7 +43,7 @@ class ExpiringSoonCard extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: Image.asset(
-              AppAssets.banana,
+              imagePath,
               width: 60,
               height: 60,
               fit: BoxFit.cover,

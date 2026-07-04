@@ -5,13 +5,26 @@ import 'package:homesikil/core/constants/app_assets.dart';
 import 'package:homesikil/core/theme/app_text_styles.dart';
 import 'package:homesikil/features/dashboard/widgets/quick_stats_card.dart';
 import 'package:homesikil/features/dashboard/widgets/expiring_soon_card.dart';
+import 'package:homesikil/features/auth/provider/auth_provider.dart';
+import 'package:homesikil/features/inventory/provider/inventory_provider.dart';
+import 'package:homesikil/features/category/provider/category_provider.dart';
 import 'package:homesikil/routes/app_routes.dart';
+import 'package:provider/provider.dart';
+import 'package:homesikil/features/notification/provider/notification_provider.dart';
+import 'package:provider/provider.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final inventoryProvider = context.watch<InventoryProvider>();
+    final categoryProvider = context.watch<CategoryProvider>();
+
+    final username = auth.currentUser?.username ?? 'Mate';
+    final expiringItems = inventoryProvider.expiringSoonItems;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -21,7 +34,10 @@ class DashboardScreen extends StatelessWidget {
             children: [
               // Top App Bar
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20.0,
+                  vertical: 10.0,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -31,7 +47,11 @@ class DashboardScreen extends StatelessWidget {
                           AppAssets.logo,
                           height: 26,
                           errorBuilder: (context, error, stackTrace) =>
-                              const Icon(Icons.eco, color: AppColors.primary, size: 26),
+                              const Icon(
+                                Icons.eco,
+                                color: AppColors.primary,
+                                size: 26,
+                              ),
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -47,10 +67,32 @@ class DashboardScreen extends StatelessWidget {
                     Container(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.primary, width: 1.5),
+                        border: Border.all(
+                          color: AppColors.primary,
+                          width: 1.5,
+                        ),
                       ),
                       child: IconButton(
-                        icon: const Icon(Icons.notifications_none, color: AppColors.primary),
+                        icon: Consumer<NotificationProvider>(
+                          builder: (context, notificationProvider, child) {
+                            if (notificationProvider.unreadCount > 0) {
+                              return Badge(
+                                label: Text(
+                                  notificationProvider.unreadCount.toString(),
+                                ),
+                                backgroundColor: AppColors.red,
+                                child: const Icon(
+                                  Icons.notifications_none,
+                                  color: AppColors.primary,
+                                ),
+                              );
+                            }
+                            return const Icon(
+                              Icons.notifications_none,
+                              color: AppColors.primary,
+                            );
+                          },
+                        ),
                         onPressed: () {
                           Navigator.pushNamed(context, AppRoutes.notification);
                         },
@@ -67,9 +109,13 @@ class DashboardScreen extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Welcome Section (Text only)
+                      // Welcome Section
                       Padding(
-                        padding: const EdgeInsets.only(left: 20.0, right: 100.0, bottom: 25.0),
+                        padding: const EdgeInsets.only(
+                          left: 20.0,
+                          right: 100.0,
+                          bottom: 25.0,
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -82,7 +128,7 @@ class DashboardScreen extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              'Zidan Masadita',
+                              username,
                               style: AppTextStyles.title.copyWith(
                                 fontSize: 28,
                                 color: AppColors.primary,
@@ -120,7 +166,7 @@ class DashboardScreen extends StatelessWidget {
                                 BlendMode.srcATop,
                               ),
                               child: Image.asset(
-                                AppAssets.mascot1, 
+                                AppAssets.mascot1,
                                 height: 160,
                                 fit: BoxFit.contain,
                               ),
@@ -129,7 +175,7 @@ class DashboardScreen extends StatelessWidget {
                         ),
                         // Actual Mascot
                         Image.asset(
-                          AppAssets.mascot1, 
+                          AppAssets.mascot1,
                           height: 160,
                           fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) =>
@@ -143,15 +189,16 @@ class DashboardScreen extends StatelessWidget {
 
               // Expiring Soon Header
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20.0,
+                  vertical: 10.0,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       'Expiring Soon',
-                      style: AppTextStyles.title.copyWith(
-                        color: Colors.black,
-                      ),
+                      style: AppTextStyles.title.copyWith(color: Colors.black),
                     ),
                     GestureDetector(
                       onTap: () {
@@ -174,24 +221,44 @@ class DashboardScreen extends StatelessWidget {
               ),
 
               // Expiring Soon List
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.0),
-                child: Column(
-                  children: [
-                    ExpiringSoonCard(
-                      title: 'Banana',
-                      daysLeft: '2 Days Left',
-                      imagePath: AppAssets.banana, 
-                    ),
-                    ExpiringSoonCard(
-                      title: 'Apple',
-                      daysLeft: '1 Days Left',
-                      imagePath: AppAssets.apple, 
-                    ),
-                  ],
-                ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: expiringItems.isEmpty
+                    ? const Padding(
+                        padding: EdgeInsets.all(20.0),
+                        child: Text(
+                          "Nothing expiring soon! Great job!",
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      )
+                    : Column(
+                        children: expiringItems.map((item) {
+                          final category = categoryProvider.findById(
+                            item.categoryId,
+                          );
+                          final imagePath =
+                              item.imageUrl ??
+                              category?.iconUrl ??
+                              AppAssets.logo;
+
+                          return ExpiringSoonCard(
+                            title:
+                                item.customName ??
+                                category?.name ??
+                                'Unknown Item',
+                            daysLeft: '${item.daysUntilExpiration} Days Left',
+                            imagePath: imagePath,
+                            badgeColor: item.daysUntilExpiration == 0
+                                ? Colors.red
+                                : AppColors.yellow,
+                            badgeText: item.daysUntilExpiration == 0
+                                ? 'Today'
+                                : 'Soon',
+                          );
+                        }).toList(),
+                      ),
               ),
-              
+
               const SizedBox(height: 100),
             ],
           ),
@@ -200,4 +267,3 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 }
-
