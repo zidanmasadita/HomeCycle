@@ -24,14 +24,14 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _rememberMe = false;
   bool _obscurePassword = true;
-  Timer? _cooldownTimer;
-  int _cooldownSeconds = 0;
+  late AuthProvider _authProvider;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AuthProvider>().addListener(_onAuthChanged);
+      _authProvider = context.read<AuthProvider>();
+      _authProvider.addListener(_onAuthChanged);
     });
   }
 
@@ -49,33 +49,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
-    context.read<AuthProvider>().removeListener(_onAuthChanged);
+    _authProvider.removeListener(_onAuthChanged);
     _emailController.dispose();
     _passwordController.dispose();
-    _cooldownTimer?.cancel();
     super.dispose();
-  }
-
-  void _startCooldownTimer(Duration cooldown) {
-    _cooldownTimer?.cancel();
-    setState(() => _cooldownSeconds = cooldown.inSeconds);
-    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (!mounted) {
-        t.cancel();
-        return;
-      }
-      setState(() => _cooldownSeconds--);
-      if (_cooldownSeconds <= 0) t.cancel();
-    });
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
     final provider = context.read<AuthProvider>();
-    if (!provider.loginCooldown.isNegative &&
-        provider.loginCooldown > Duration.zero)
-      return;
 
     await provider.signIn(
       email: _emailController.text,
@@ -92,9 +75,6 @@ class _LoginScreenState extends State<LoginScreen> {
         (_) => false,
       );
     } else {
-      if (updated.loginCooldown > Duration.zero) {
-        _startCooldownTimer(updated.loginCooldown);
-      }
       AppSnackbar.showError(updated.errorMessage ?? 'Login failed');
     }
   }
@@ -327,14 +307,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                 // Login Button
                                 Consumer<AuthProvider>(
                                   builder: (context, auth, _) {
-                                    final isCoolingDown = _cooldownSeconds > 0;
-                                    final isDisabled =
-                                        auth.isLoading || isCoolingDown;
                                     return SizedBox(
                                       width: double.infinity,
                                       height: 55,
                                       child: ElevatedButton(
-                                        onPressed: isDisabled ? null : _submit,
+                                        onPressed: auth.isLoading ? null : _submit,
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: AppColors.primary,
                                           disabledBackgroundColor:
@@ -356,11 +333,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                                       strokeWidth: 2,
                                                     ),
                                               )
-                                            : Text(
-                                                isCoolingDown
-                                                    ? 'Try again in ${_cooldownSeconds}s'
-                                                    : 'Login',
-                                                style: const TextStyle(
+                                            : const Text(
+                                                'Login',
+                                                style: TextStyle(
                                                   fontSize: 22,
                                                   fontWeight: FontWeight.bold,
                                                   color: Colors.white,

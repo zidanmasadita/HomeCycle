@@ -64,6 +64,32 @@ class AuthRepository {
     }
   }
 
+  Future<void> updateProfile({
+    String? fullName,
+    String? phone,
+    String? password,
+  }) async {
+    try {
+      final Map<String, dynamic> data = {};
+      if (fullName != null && fullName.isNotEmpty) {
+        data['username'] = fullName;
+        data['full_name'] = fullName;
+      }
+      if (phone != null && phone.isNotEmpty) {
+        data['phone'] = phone;
+      }
+
+      await _client.auth.updateUser(
+        UserAttributes(
+          data: data.isNotEmpty ? data : null,
+          password: (password != null && password.isNotEmpty) ? password : null,
+        ),
+      );
+    } catch (e) {
+      throw Failure.fromException(e);
+    }
+  }
+
   Future<void> resetPassword({required String email}) async {
     try {
       await _client.auth.resetPasswordForEmail(email);

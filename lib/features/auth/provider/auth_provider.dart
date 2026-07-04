@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:homesikil/core/utils/action_throttler.dart';
 import 'package:homesikil/errors/failure.dart';
 import 'package:homesikil/features/auth/models/user_model.dart';
 import 'package:homesikil/features/auth/repository/auth_repository.dart';
@@ -11,10 +10,6 @@ enum AuthStatus { initial, loading, success, error }
 class AuthProvider extends ChangeNotifier {
   final AuthRepository _repository;
   StreamSubscription<UserModel?>? _authSubscription;
-
-  final _loginThrottler = ActionThrottler();
-  final _registerThrottler = ActionThrottler();
-  final _resetPasswordThrottler = ActionThrottler();
 
   AuthProvider(this._repository) {
     _currentUser = _repository.getCurrentUser();
@@ -36,29 +31,15 @@ class AuthProvider extends ChangeNotifier {
   AuthStatus _status = AuthStatus.initial;
   UserModel? _currentUser;
   String? _errorMessage;
-  Duration _loginCooldown = Duration.zero;
-  Duration _registerCooldown = Duration.zero;
-  Duration _resetCooldown = Duration.zero;
 
   AuthStatus get status => _status;
   UserModel? get currentUser => _currentUser;
   String? get errorMessage => _errorMessage;
   bool get isLoading => _status == AuthStatus.loading;
-  Duration get loginCooldown => _loginCooldown;
-  Duration get registerCooldown => _registerCooldown;
-  Duration get resetCooldown => _resetCooldown;
 
   Future<void> signIn({required String email, required String password}) async {
-    if (!_loginThrottler.canAttempt) {
-      _loginCooldown = _loginThrottler.remainingCooldown;
-      notifyListeners();
-      return;
-    }
-    _loginThrottler.recordAttempt();
-
     _status = AuthStatus.loading;
     _errorMessage = null;
-    _loginCooldown = Duration.zero;
     notifyListeners();
 
     try {
@@ -67,12 +48,9 @@ class AuthProvider extends ChangeNotifier {
         password: password,
       );
       _status = AuthStatus.success;
-      _loginThrottler.reset();
-    } on Failure {
-      _errorMessage = 'Email or password is incorrect';
+    } on Failure catch (e) {
+      _errorMessage = e.message;
       _status = AuthStatus.error;
-      _loginThrottler.recordFailure();
-      _loginCooldown = _loginThrottler.remainingCooldown;
     }
     notifyListeners();
   }
@@ -82,16 +60,8 @@ class AuthProvider extends ChangeNotifier {
     required String password,
     required String username,
   }) async {
-    if (!_registerThrottler.canAttempt) {
-      _registerCooldown = _registerThrottler.remainingCooldown;
-      notifyListeners();
-      return;
-    }
-    _registerThrottler.recordAttempt();
-
     _status = AuthStatus.loading;
     _errorMessage = null;
-    _registerCooldown = Duration.zero;
     notifyListeners();
 
     try {
@@ -102,12 +72,9 @@ class AuthProvider extends ChangeNotifier {
       );
       _currentUser = user;
       _status = AuthStatus.success;
-      _registerThrottler.reset();
     } on Failure catch (e) {
       _errorMessage = e.message;
       _status = AuthStatus.error;
-      _registerThrottler.recordFailure();
-      _registerCooldown = _registerThrottler.remainingCooldown;
     }
     notifyListeners();
   }
@@ -148,28 +115,43 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> resetPassword({required String email}) async {
-    if (!_resetPasswordThrottler.canAttempt) {
-      _resetCooldown = _resetPasswordThrottler.remainingCooldown;
-      notifyListeners();
-      return;
-    }
-    _resetPasswordThrottler.recordAttempt();
-
+  Future<bool> updateProfile({
+    String? fullName,
+    String? phone,
+    String? password,
+  }) async {
     _status = AuthStatus.loading;
     _errorMessage = null;
-    _resetCooldown = Duration.zero;
+    notifyListeners();
+
+    try {
+      await _repository.updateProfile(
+        fullName: fullName,
+        phone: phone,
+        password: password,
+      );
+      _status = AuthStatus.success;
+      notifyListeners();
+      return true;
+    } on Failure catch (e) {
+      _errorMessage = e.message;
+      _status = AuthStatus.error;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<void> resetPassword({required String email}) async {
+    _status = AuthStatus.loading;
+    _errorMessage = null;
     notifyListeners();
 
     try {
       await _repository.resetPassword(email: email.trim());
       _status = AuthStatus.success;
-      _resetPasswordThrottler.reset();
     } on Failure catch (e) {
       _errorMessage = e.message;
       _status = AuthStatus.error;
-      _resetPasswordThrottler.recordFailure();
-      _resetCooldown = _resetPasswordThrottler.remainingCooldown;
     }
     notifyListeners();
   }

@@ -26,8 +26,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordFocusNode = FocusNode();
   bool _obscurePassword = true;
   bool _showPasswordPolicy = false;
-  Timer? _cooldownTimer;
-  int _cooldownSeconds = 0;
+
+  late AuthProvider _authProvider;
 
   @override
   void initState() {
@@ -36,7 +36,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() => _showPasswordPolicy = _passwordFocusNode.hasFocus);
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AuthProvider>().addListener(_onAuthChanged);
+      _authProvider = context.read<AuthProvider>();
+      _authProvider.addListener(_onAuthChanged);
     });
   }
 
@@ -50,32 +51,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
-    context.read<AuthProvider>().removeListener(_onAuthChanged);
+    _authProvider.removeListener(_onAuthChanged);
     _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _passwordFocusNode.dispose();
-    _cooldownTimer?.cancel();
     super.dispose();
-  }
-
-  void _startCooldownTimer(Duration cooldown) {
-    _cooldownTimer?.cancel();
-    setState(() => _cooldownSeconds = cooldown.inSeconds);
-    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (!mounted) {
-        t.cancel();
-        return;
-      }
-      setState(() => _cooldownSeconds--);
-      if (_cooldownSeconds <= 0) t.cancel();
-    });
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
     final provider = context.read<AuthProvider>();
+
     await provider.signUp(
       email: _emailController.text,
       password: _passwordController.text,
@@ -93,9 +81,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Navigator.pushNamedAndRemoveUntil(context, AppRoutes.splash, (_) => false);
       }
     } else {
-      if (updated.registerCooldown > Duration.zero) {
-        _startCooldownTimer(updated.registerCooldown);
-      }
       AppSnackbar.showError(updated.errorMessage ?? 'Registration failed');
     }
   }
@@ -284,13 +269,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 // Register Button
                                 Consumer<AuthProvider>(
                                   builder: (context, auth, _) {
-                                    final isCoolingDown = _cooldownSeconds > 0;
-                                    final isDisabled = auth.isLoading || isCoolingDown;
                                     return SizedBox(
                                       width: double.infinity,
                                       height: 50,
                                       child: ElevatedButton(
-                                        onPressed: isDisabled ? null : _submit,
+                                        onPressed: auth.isLoading ? null : _submit,
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: AppColors.primary,
                                           disabledBackgroundColor: Colors.grey.shade400,
@@ -306,13 +289,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                                 child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                                               )
                                             : Text(
-                                                isCoolingDown
-                                                    ? 'Try again in ${_cooldownSeconds}s'
-                                                    : 'Register',
-                                                style: const TextStyle(
-                                                  fontSize: 22,
-                                                  fontWeight: FontWeight.bold,
+                                                'Register',
+                                                style: AppTextStyles.bodyMedium.copyWith(
                                                   color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
                                                 ),
                                               ),
                                       ),
