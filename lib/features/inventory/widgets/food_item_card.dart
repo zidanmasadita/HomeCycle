@@ -3,10 +3,16 @@ import 'package:homesikil/core/theme/app_text_styles.dart';
 import 'package:homesikil/features/inventory/widgets/expiry_badge.dart';
 import 'package:homesikil/routes/app_routes.dart';
 
-class FoodItemCard extends StatelessWidget {
-  final Map<String, dynamic> item;
+import 'package:homesikil/core/constants/app_colors.dart';
+import 'package:homesikil/core/constants/app_assets.dart';
+import 'package:homesikil/features/inventory/models/food_item_model.dart';
+import 'package:homesikil/features/category/models/category_model.dart';
 
-  const FoodItemCard({super.key, required this.item});
+class FoodItemCard extends StatelessWidget {
+  final FoodItemModel item;
+  final CategoryModel? category;
+
+  const FoodItemCard({super.key, required this.item, this.category});
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +47,7 @@ class FoodItemCard extends StatelessWidget {
                 color: Colors.grey.shade50,
               ),
               child: Image.asset(
-                item['image'],
+                item.imageUrl ?? category?.iconUrl ?? AppAssets.logo,
                 errorBuilder: (context, error, stackTrace) =>
                     const Icon(Icons.image, color: Colors.grey),
               ),
@@ -54,17 +60,17 @@ class FoodItemCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item['name'],
+                    item.customName ?? category?.name ?? 'Unknown Item',
                     style: AppTextStyles.title.copyWith(fontSize: 18),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    item['daysLeft'],
+                    item.isExpired 
+                        ? 'Expired' 
+                        : '${item.daysUntilExpiration} days left',
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color: item['subtitleColor'] ?? Colors.grey.shade600,
-                      fontWeight: item['subtitleColor'] != null
-                          ? FontWeight.w600
-                          : FontWeight.normal,
+                      color: item.isExpired ? AppColors.red : Colors.grey.shade600,
+                      fontWeight: item.isExpired ? FontWeight.w600 : FontWeight.normal,
                     ),
                   ),
                 ],
@@ -73,9 +79,15 @@ class FoodItemCard extends StatelessWidget {
 
             // Badge
             ExpiryBadge(
-              status: item['status'],
-              backgroundColor: item['color'],
-              textColor: item['textColor'],
+              status: item.isExpired 
+                  ? 'Expired' 
+                  : (item.isExpiringSoon ? 'Soon' : 'Fresh'),
+              backgroundColor: item.isExpired 
+                  ? AppColors.red.withValues(alpha: 0.1)
+                  : (item.isExpiringSoon ? AppColors.yellow.withValues(alpha: 0.1) : AppColors.success.withValues(alpha: 0.1)),
+              textColor: item.isExpired 
+                  ? AppColors.red 
+                  : (item.isExpiringSoon ? AppColors.yellow : AppColors.success),
             ),
           ],
         ),

@@ -4,6 +4,9 @@ import 'package:homesikil/core/theme/app_text_styles.dart';
 import 'package:homesikil/core/constants/app_dimens.dart';
 import 'package:homesikil/features/inventory/widgets/category_filter_chip.dart';
 import 'package:homesikil/features/inventory/widgets/food_item_card.dart';
+import 'package:homesikil/features/inventory/provider/inventory_provider.dart';
+import 'package:homesikil/features/category/provider/category_provider.dart';
+import 'package:provider/provider.dart';
 
 class InventoryScreen extends StatefulWidget {
   const InventoryScreen({super.key});
@@ -16,42 +19,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
   final List<String> categories = ['All', 'Fresh', 'Expire Soon', 'Expired'];
   String selectedCategory = 'All';
 
-  // Mock data for UI layout
-  final List<Map<String, dynamic>> items = [
-    {
-      'name': 'Apple',
-      'daysLeft': '2 days left',
-      'status': 'Fresh',
-      'image': 'assets/images/food-images/apple.png',
-      'color': AppColors.success.withValues(alpha: 0.1),
-      'textColor': AppColors.success,
-    },
-    {
-      'name': 'Cabbage',
-      'daysLeft': '1 day left',
-      'status': 'Soon',
-      'image': 'assets/images/food-images/cabbage.png',
-      'color': AppColors.yellow.withValues(alpha: 0.1),
-      'textColor': AppColors.yellow,
-    },
-    {
-      'name': 'Lettuce',
-      'daysLeft': 'Expired',
-      'status': 'Expired',
-      'image': 'assets/images/food-images/lettuce.png',
-      'color': AppColors.red.withValues(alpha: 0.1),
-      'textColor': AppColors.red,
-      'subtitleColor': AppColors.red,
-    },
-    {
-      'name': 'Carrot',
-      'daysLeft': '4 days left',
-      'status': 'Fresh',
-      'image': 'assets/images/food-images/carrot.png',
-      'color': AppColors.success.withValues(alpha: 0.1),
-      'textColor': AppColors.success,
-    },
-  ];
+
 
   @override
   Widget build(BuildContext context) {
@@ -133,14 +101,39 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
             // List
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppDimens.paddingLarge,
-                ),
-                itemCount: items.length,
-                itemBuilder: (context, index) {
-                  final item = items[index];
-                  return FoodItemCard(item: item);
+              child: Consumer2<InventoryProvider, CategoryProvider>(
+                builder: (context, inventory, categories, _) {
+                  var displayList = inventory.inventory;
+                  
+                  if (selectedCategory == 'Fresh') {
+                    displayList = inventory.activeItems.where((i) => !i.isExpiringSoon && !i.isExpired).toList();
+                  } else if (selectedCategory == 'Expire Soon') {
+                    displayList = inventory.expiringSoonItems;
+                  } else if (selectedCategory == 'Expired') {
+                    displayList = inventory.expiredItems;
+                  }
+
+                  if (inventory.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (displayList.isEmpty) {
+                    return const Center(
+                      child: Text('Your inventory is empty in this category!'),
+                    );
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppDimens.paddingLarge,
+                    ),
+                    itemCount: displayList.length,
+                    itemBuilder: (context, index) {
+                      final item = displayList[index];
+                      final category = categories.findById(item.categoryId);
+                      return FoodItemCard(item: item, category: category);
+                    },
+                  );
                 },
               ),
             ),

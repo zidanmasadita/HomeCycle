@@ -3,14 +3,28 @@ import 'package:provider/provider.dart';
 import 'package:homesikil/core/constants/app_colors.dart';
 import 'package:homesikil/core/theme/app_text_styles.dart';
 import 'package:homesikil/routes/app_routes.dart';
-
 import 'package:homesikil/core/utils/app_snackbar.dart';
+import 'package:homesikil/features/scan/provider/scan_provider.dart';
+import 'package:homesikil/features/inventory/models/food_item_model.dart';
+import 'package:homesikil/features/auth/provider/auth_provider.dart';
+import 'package:uuid/uuid.dart';
 
 class ScanResultScreen extends StatelessWidget {
   const ScanResultScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final scanProvider = context.watch<ScanProvider>();
+    final result = scanProvider.lastResult;
+
+    if (result == null) {
+      return const Scaffold(body: Center(child: Text("No result found")));
+    }
+
+    final confidencePercent = (result.confidenceScore * 100).toStringAsFixed(0);
+
+    final expirationDays = 7;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -30,16 +44,23 @@ class ScanResultScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Asset Image (Mocked)
+                  // Scanned Image
                   Center(
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(16),
-                      child: Image.asset(
-                        'assets/images/food-images/apple.png',
-                        height: 180,
-                        width: double.infinity,
-                        fit: BoxFit.contain,
-                      ),
+                      child: result.imageBytes != null
+                          ? Image.memory(
+                              result.imageBytes!,
+                              height: 180,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                            )
+                          : Image.asset(
+                              'assets/images/food-images/apple.png',
+                              height: 180,
+                              width: double.infinity,
+                              fit: BoxFit.contain,
+                            ),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -66,23 +87,23 @@ class ScanResultScreen extends StatelessWidget {
                         _buildDetailRow(
                           Icons.restaurant,
                           'Food Name',
-                          'Apple Fuji',
+                          result.detectedLabel,
                         ),
                         const SizedBox(height: 16),
                         _buildDetailRow(
                           Icons.eco,
                           'Freshness',
-                          'Fresh (92%)',
+                          'Fresh ($confidencePercent%)',
                           color: Colors.green,
                         ),
                         const SizedBox(height: 16),
                         _buildDetailRow(
                           Icons.calendar_today,
                           'Estimated Expiry',
-                          '7 Days',
+                          '$expirationDays Days',
                         ),
                         const SizedBox(height: 16),
-                        _buildDetailRow(Icons.category, 'Category', 'Fruits'),
+                        _buildDetailRow(Icons.category, 'Category', 'Detected'),
                       ],
                     ),
                   ),
@@ -111,15 +132,56 @@ class ScanResultScreen extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamedAndRemoveUntil(
-                          context,
-                          AppRoutes.dashboard,
-                          (route) => false,
-                          arguments: {'index': 1},
-                        );
-                        AppSnackbar.showSuccess('Item saved to inventory!');
-                      },
+                      onPressed: scanProvider.isLoading
+                          ? null
+                          : () async {
+                              final user = context
+                                  .read<AuthProvider>()
+                                  .currentUser;
+                              if (user == null) return;
+
+                              final item = FoodItemModel(
+                                id: Uuid().v4(),
+                                userId: user.id,
+                                categoryId:
+                                    result.categoryId ??
+                                    'uuid-of-other-category',
+                                customName: result.detectedLabel,
+                                condition: 'fresh',
+                                confidenceScore: result.confidenceScore,
+                                quantity: 1,
+                                unit: 'pcs',
+                                storageLocation: 'fridge',
+                                scannedAt: DateTime.now(),
+                                estimatedExpiredDate: DateTime.now().add(
+                                  Duration(days: expirationDays),
+                                ),
+                                actualStatus: 'active',
+                                createdAt: DateTime.now(),
+                                updatedAt: DateTime.now(),
+                              );
+
+                              final success = await context
+                                  .read<ScanProvider>()
+                                  .confirmAndSave(item: item);
+
+                              if (success && context.mounted) {
+                                Navigator.pushNamedAndRemoveUntil(
+                                  context,
+                                  AppRoutes.dashboard,
+                                  (route) => false,
+                                  arguments: {'index': 1},
+                                );
+                                AppSnackbar.showSuccess(
+                                  'Item saved to inventory!',
+                                );
+                              } else if (context.mounted) {
+                                AppSnackbar.showError(
+                                  scanProvider.errorMessage ??
+                                      'Failed to save item',
+                                );
+                              }
+                            },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -127,14 +189,16 @@ class ScanResultScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
-                        'Save to Inventory',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: scanProvider.isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                              'Save to Inventory',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 12),
