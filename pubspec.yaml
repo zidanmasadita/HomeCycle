@@ -44,6 +44,9 @@ dependencies:
   google_fonts: ^6.2.1
   url_launcher: ^6.3.2
   shared_preferences: ^2.5.5
+  uuid: ^4.5.3
+  timeago: ^3.7.1
+  intl: ^0.20.2
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -74,6 +77,7 @@ flutter:
     - assets/images/icons/
     - assets/images/mascots/
     - assets/images/food-images/
+    - assets/images/badges/
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
