@@ -20,6 +20,7 @@ import 'features/notification/repository/notification_repository.dart';
 import 'features/dashboard/repository/dashboard_repository.dart';
 import 'features/gamification/repository/gamification_repository.dart';
 import 'features/profile/repository/profile_repository.dart';
+import 'features/household/repository/household_repository.dart';
 
 // Providers
 import 'features/auth/provider/auth_provider.dart';
@@ -31,6 +32,7 @@ import 'features/notification/provider/notification_provider.dart';
 import 'features/dashboard/provider/dashboard_provider.dart';
 import 'features/gamification/provider/gamification_provider.dart';
 import 'features/profile/provider/profile_provider.dart';
+import 'features/household/provider/household_provider.dart';
 
 import 'package:homesikil/core/utils/app_snackbar.dart';
 
@@ -80,6 +82,9 @@ class HomeCycleApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (_) => ProfileProvider(ProfileRepository()),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => HouseholdProvider(HouseholdRepository()),
         ),
         
         // Dependent Providers

@@ -7,6 +7,7 @@ import 'package:homesikil/features/gamification/screens/impact_dashboard_screen.
 import 'package:homesikil/features/inventory/screens/add_edit_item_screen.dart';
 import 'package:homesikil/features/inventory/screens/inventory_screen.dart';
 import 'package:homesikil/features/inventory/screens/item_detail_screen.dart';
+import 'package:homesikil/features/inventory/models/food_item_model.dart';
 import 'package:homesikil/features/notification/screens/notification_screen.dart';
 import 'package:homesikil/features/onboarding/screens/onboarding_screen.dart';
 import 'package:homesikil/features/recipe_rescue.dart/screens/language_settings_screen.dart';
@@ -38,7 +39,8 @@ class RouteGenerator {
       case AppRoutes.inventory:
         return MaterialPageRoute(builder: (_) => const InventoryScreen());
       case AppRoutes.itemDetail:
-        return MaterialPageRoute(builder: (_) => const ItemDetailScreen());
+        final item = settings.arguments as FoodItemModel;
+        return MaterialPageRoute(builder: (_) => ItemDetailScreen(item: item));
       case AppRoutes.addEditItem:
         return MaterialPageRoute(builder: (_) => const AddEditItemScreen());
       case AppRoutes.scan:
