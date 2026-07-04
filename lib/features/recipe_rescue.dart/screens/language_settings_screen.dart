@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:homesikil/core/constants/app_colors.dart';
 import 'package:homesikil/core/theme/app_text_styles.dart';
 import 'package:homesikil/core/constants/app_dimens.dart';
+import 'package:homesikil/features/profile/provider/profile_provider.dart';
+import 'package:provider/provider.dart';
 
 class LanguageSettingsScreen extends StatefulWidget {
   const LanguageSettingsScreen({super.key});
@@ -11,21 +13,19 @@ class LanguageSettingsScreen extends StatefulWidget {
 }
 
 class _LanguageSettingsScreenState extends State<LanguageSettingsScreen> {
-  String selectedLanguage = 'English (US)';
-
   final List<Map<String, String>> languages = [
-    {'name': 'English (US)', 'code': 'en_US'},
-    {'name': 'Indonesian', 'code': 'id_ID'},
+    {'name': 'English (US)', 'code': 'en'},
+    {'name': 'Indonesian', 'code': 'id'},
   ];
 
-  Widget _buildLanguageCard(String languageName) {
-    final isSelected = selectedLanguage == languageName;
+  Widget _buildLanguageCard(String languageName, String languageCode) {
+    final provider = context.watch<ProfileProvider>();
+    final currentCode = provider.preferences?.preferredLanguage ?? 'id';
+    final isSelected = currentCode == languageCode;
 
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedLanguage = languageName;
-        });
+      onTap: () async {
+        await context.read<ProfileProvider>().updateLanguage(languageCode);
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -100,7 +100,7 @@ class _LanguageSettingsScreenState extends State<LanguageSettingsScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            ...languages.map((lang) => _buildLanguageCard(lang['name']!)),
+            ...languages.map((lang) => _buildLanguageCard(lang['name']!, lang['code']!)),
           ],
         ),
       ),

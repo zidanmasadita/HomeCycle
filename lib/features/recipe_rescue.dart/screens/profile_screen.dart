@@ -4,12 +4,18 @@ import 'package:homesikil/core/theme/app_text_styles.dart';
 import 'package:homesikil/routes/app_routes.dart';
 import 'package:homesikil/features/recipe_rescue.dart/widgets/profile_header_card.dart';
 import 'package:homesikil/features/recipe_rescue.dart/widgets/profile_menu_card.dart';
+import 'package:homesikil/features/auth/provider/auth_provider.dart';
+import 'package:homesikil/features/household/provider/household_provider.dart';
+import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final user = authProvider.currentUser;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -31,8 +37,8 @@ class ProfileScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ProfileHeaderCard(
-              username: 'Zidan Masadita',
-              email: 'zidan@example.com',
+              username: user?.username ?? 'Mate',
+              email: user?.email ?? 'No email provided',
               onEditTap: () {
                 Navigator.pushNamed(context, AppRoutes.editProfile);
               },
@@ -63,11 +69,17 @@ class ProfileScreen extends StatelessWidget {
                 Navigator.pushNamed(context, AppRoutes.notificationSettings);
               },
             ),
-            ProfileMenuCard(
-              icon: Icons.group_outlined,
-              title: 'Household Members',
-              onTap: () {
-                Navigator.pushNamed(context, AppRoutes.householdMembers);
+            Consumer<HouseholdProvider>(
+              builder: (context, household, child) {
+                final count = household.members.length;
+                return ProfileMenuCard(
+                  icon: Icons.group_outlined,
+                  title: 'Household Members',
+                  trailingText: count > 0 ? '$count members' : 'None',
+                  onTap: () {
+                    Navigator.pushNamed(context, AppRoutes.householdMembers);
+                  },
+                );
               },
             ),
 
@@ -101,12 +113,16 @@ class ProfileScreen extends StatelessWidget {
               icon: Icons.logout,
               title: 'Logout',
               isDestructive: true,
-              onTap: () {
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  AppRoutes.login,
-                  (route) => false,
-                );
+              onTap: () async {
+                final authProvider = context.read<AuthProvider>();
+                await authProvider.signOut();
+                if (authProvider.status != AuthStatus.error && context.mounted) {
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    AppRoutes.login,
+                    (route) => false,
+                  );
+                }
               },
             ),
 

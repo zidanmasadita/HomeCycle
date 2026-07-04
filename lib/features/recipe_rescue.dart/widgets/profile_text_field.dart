@@ -8,6 +8,8 @@ class ProfileTextField extends StatelessWidget {
   final String? hintText;
   final TextInputType keyboardType;
   final bool obscureText;
+  final TextEditingController? controller;
+  final bool readOnly;
 
   const ProfileTextField({
     super.key,
@@ -16,6 +18,8 @@ class ProfileTextField extends StatelessWidget {
     this.hintText,
     this.keyboardType = TextInputType.text,
     this.obscureText = false,
+    this.controller,
+    this.readOnly = false,
   });
 
   @override
@@ -32,10 +36,14 @@ class ProfileTextField extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         TextFormField(
-          initialValue: initialValue,
+          controller: controller,
+          initialValue: controller == null ? initialValue : null,
           keyboardType: keyboardType,
           obscureText: obscureText,
-          style: AppTextStyles.bodyMedium.copyWith(color: Colors.black87),
+          readOnly: readOnly,
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: readOnly ? Colors.grey.shade600 : Colors.black87,
+          ),
           decoration: InputDecoration(
             hintText: hintText,
             hintStyle: AppTextStyles.bodyMedium.copyWith(color: Colors.grey.shade400),

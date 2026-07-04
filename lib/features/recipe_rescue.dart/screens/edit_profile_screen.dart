@@ -4,6 +4,8 @@ import 'package:homesikil/core/theme/app_text_styles.dart';
 import 'package:homesikil/core/constants/app_dimens.dart';
 import 'package:homesikil/core/constants/app_assets.dart';
 import 'package:homesikil/features/recipe_rescue.dart/widgets/profile_text_field.dart';
+import 'package:provider/provider.dart';
+import 'package:homesikil/features/auth/provider/auth_provider.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -13,6 +15,60 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
+  final _fullNameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = context.read<AuthProvider>().currentUser;
+      if (user != null) {
+        _fullNameController.text = user.username ?? '';
+        _emailController.text = user.email;
+        _phoneController.text = user.phone ?? '';
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _fullNameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleSave() async {
+    setState(() => _isLoading = true);
+    
+    final success = await context.read<AuthProvider>().updateProfile(
+      fullName: _fullNameController.text,
+      phone: _phoneController.text,
+      password: _passwordController.text,
+    );
+    
+    if (!mounted) return;
+    
+    setState(() => _isLoading = false);
+    
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile updated successfully!')),
+      );
+      Navigator.pop(context);
+    } else {
+      final error = context.read<AuthProvider>().errorMessage;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error ?? 'Failed to update profile')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,24 +131,27 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
             const SizedBox(height: 40),
 
-            const ProfileTextField(
+            ProfileTextField(
               label: 'Full Name',
-              initialValue: 'Zidan Masadita',
+              controller: _fullNameController,
             ),
-            const ProfileTextField(
+            ProfileTextField(
               label: 'Email',
-              initialValue: 'zidan@example.com',
+              controller: _emailController,
               keyboardType: TextInputType.emailAddress,
+              readOnly: true,
             ),
-            const ProfileTextField(
+            ProfileTextField(
               label: 'Phone Number',
-              initialValue: '+62 812 3456 7890',
+              controller: _phoneController,
               keyboardType: TextInputType.phone,
+              hintText: 'Optional',
             ),
-            const ProfileTextField(
+            ProfileTextField(
               label: 'Password',
-              initialValue: '********',
+              controller: _passwordController,
               obscureText: true,
+              hintText: 'Enter new password to change',
             ),
 
             const SizedBox(height: 32),
@@ -100,23 +159,27 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
+                onPressed: _isLoading ? null : _handleSave,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                child: const Text(
-                  'Save Changes',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(color: Colors.white),
+                      )
+                    : const Text(
+                        'Save Changes',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ),
           ],

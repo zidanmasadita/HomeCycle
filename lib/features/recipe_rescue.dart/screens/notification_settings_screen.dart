@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:homesikil/core/constants/app_colors.dart';
 import 'package:homesikil/core/theme/app_text_styles.dart';
 import 'package:homesikil/core/constants/app_dimens.dart';
+import 'package:homesikil/features/profile/provider/profile_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({super.key});
@@ -15,7 +18,32 @@ class _NotificationSettingsScreenState
     extends State<NotificationSettingsScreen> {
   bool pushNotifications = true;
   bool emailNotifications = false;
-  bool expiryAlerts = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      pushNotifications = prefs.getBool('push_notifications') ?? true;
+      emailNotifications = prefs.getBool('email_notifications') ?? false;
+    });
+  }
+
+  Future<void> _updatePushNotifications(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('push_notifications', value);
+    setState(() => pushNotifications = value);
+  }
+
+  Future<void> _updateEmailNotifications(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('email_notifications', value);
+    setState(() => emailNotifications = value);
+  }
 
   Widget _buildSwitchItem(
     String title,
@@ -62,6 +90,10 @@ class _NotificationSettingsScreenState
 
   @override
   Widget build(BuildContext context) {
+    final profileProvider = context.watch<ProfileProvider>();
+    final notifyDays = profileProvider.preferences?.notifyDaysBeforeExpiry ?? 2;
+    final expiryAlerts = notifyDays > 0;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -84,14 +116,10 @@ class _NotificationSettingsScreenState
         padding: const EdgeInsets.all(AppDimens.paddingLarge),
         child: Column(
           children: [
-            _buildSwitchItem('Push Notifications', pushNotifications, (val) {
-              setState(() => pushNotifications = val);
-            }),
-            _buildSwitchItem('Email Notifications', emailNotifications, (val) {
-              setState(() => emailNotifications = val);
-            }),
+            _buildSwitchItem('Push Notifications', pushNotifications, _updatePushNotifications),
+            _buildSwitchItem('Email Notifications', emailNotifications, _updateEmailNotifications),
             _buildSwitchItem('Expiry Alerts', expiryAlerts, (val) {
-              setState(() => expiryAlerts = val);
+              context.read<ProfileProvider>().updateNotifyDaysBeforeExpiry(val ? 2 : 0);
             }),
           ],
         ),
