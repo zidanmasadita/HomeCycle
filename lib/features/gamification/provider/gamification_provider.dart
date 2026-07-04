@@ -6,12 +6,12 @@ enum GamificationStatus { initial, loading, success, error }
 
 class GamificationProvider extends ChangeNotifier {
   final GamificationRepository _repository;
-  
+
   GamificationStatus _status = GamificationStatus.initial;
   List<AchievementModel> _achievements = [];
   List<AchievementModel> _newlyUnlocked = [];
   String? _errorMessage;
-  int _currentStreakWeeks = 3; // Mocked data as per backend Task 006
+  int _currentStreakWeeks = 3;
 
   GamificationProvider(this._repository);
 
@@ -48,23 +48,21 @@ class GamificationProvider extends ChangeNotifier {
     double totalCo2Saved = 0.0,
   }) async {
     bool hasNewUnlocks = false;
-    
+
     for (int i = 0; i < _achievements.length; i++) {
       final achievement = _achievements[i];
       if (achievement.isUnlocked) continue;
 
       bool meetsCriteria = false;
-      
-      // Cek kriteria jumlah untuk item yang disimpan
-      if (achievement.criteriaType == 'count' && itemsSavedCount >= achievement.criteriaValue) {
+
+      if (achievement.criteriaType == 'count' &&
+          itemsSavedCount >= achievement.criteriaValue) {
         meetsCriteria = true;
-      }
-      // Cek kriteria streak untuk minggu berturut-turut
-      else if (achievement.criteriaType == 'streak' && currentStreakWeeks >= achievement.criteriaValue) {
+      } else if (achievement.criteriaType == 'streak' &&
+          currentStreakWeeks >= achievement.criteriaValue) {
         meetsCriteria = true;
-      }
-      // Cek kriteria threshold (misalnya total CO2 yang terselamatkan)
-      else if (achievement.criteriaType == 'threshold' && totalCo2Saved >= achievement.criteriaValue) {
+      } else if (achievement.criteriaType == 'threshold' &&
+          totalCo2Saved >= achievement.criteriaValue) {
         meetsCriteria = true;
       }
 
@@ -72,13 +70,12 @@ class GamificationProvider extends ChangeNotifier {
         try {
           await _repository.unlockAchievement(achievement.id);
           _achievements[i] = achievement.copyWith(
-            isUnlocked: true, 
+            isUnlocked: true,
             achievedAt: DateTime.now(),
           );
           _newlyUnlocked.add(_achievements[i]);
           hasNewUnlocks = true;
-        } catch (_) {
-        }
+        } catch (_) {}
       }
     }
 

@@ -35,7 +35,7 @@ class ScanResultScreen extends StatelessWidget {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(16),
                       child: Image.asset(
-                        'assets/images/food-images/apple.png', // Using an asset image as requested
+                        'assets/images/food-images/apple.png',
                         height: 180,
                         width: double.infinity,
                         fit: BoxFit.contain,
@@ -43,7 +43,7 @@ class ScanResultScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Result Details Card
                   Container(
                     padding: const EdgeInsets.all(20),
@@ -113,10 +113,10 @@ class ScanResultScreen extends StatelessWidget {
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.pushNamedAndRemoveUntil(
-                          context, 
-                          AppRoutes.dashboard, 
+                          context,
+                          AppRoutes.dashboard,
                           (route) => false,
-                          arguments: {'index': 1}, // Route to Inventory Tab
+                          arguments: {'index': 1},
                         );
                         AppSnackbar.showSuccess('Item saved to inventory!');
                       },

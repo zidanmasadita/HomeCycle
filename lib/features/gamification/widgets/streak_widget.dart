@@ -5,7 +5,7 @@ import 'package:homesikil/core/theme/app_text_styles.dart';
 class StreakWidget extends StatelessWidget {
   final int streakNumber;
   final String label;
-  final int activeDays; // Usually 0-7 for a week representation
+  final int activeDays;
 
   const StreakWidget({
     super.key,
@@ -82,11 +82,7 @@ class StreakWidget extends StatelessWidget {
                   ),
                 ),
                 child: isFilled
-                    ? const Icon(
-                        Icons.check,
-                        color: Colors.white,
-                        size: 20,
-                      )
+                    ? const Icon(Icons.check, color: Colors.white, size: 20)
                     : null,
               );
             }),

@@ -30,7 +30,7 @@ class AchievementBadge extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    Icons.emoji_events, // Placeholder for actual icon based on model
+                    Icons.emoji_events,
                     size: 64,
                     color: achievement.isUnlocked
                         ? AppColors.primary
@@ -55,7 +55,10 @@ class AchievementBadge extends StatelessWidget {
                 const SizedBox(height: 16),
                 if (achievement.isUnlocked && achievement.achievedAt != null)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
@@ -70,7 +73,10 @@ class AchievementBadge extends StatelessWidget {
                   )
                 else
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.grey.shade100,
                       borderRadius: BorderRadius.circular(20),
