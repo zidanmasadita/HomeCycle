@@ -8,6 +8,7 @@ import 'package:homesikil/features/dashboard/provider/dashboard_provider.dart';
 import 'package:homesikil/features/gamification/widgets/impact_card_widget.dart';
 import 'package:homesikil/features/gamification/widgets/streak_widget.dart';
 import 'package:homesikil/features/gamification/widgets/achievement_badge.dart';
+import 'package:homesikil/features/gamification/widgets/achievement_unlocked_dialog.dart';
 
 class ImpactDashboardScreen extends StatefulWidget {
   const ImpactDashboardScreen({super.key});
@@ -17,11 +18,15 @@ class ImpactDashboardScreen extends StatefulWidget {
 }
 
 class _ImpactDashboardScreenState extends State<ImpactDashboardScreen> {
+  bool _showAllAchievements = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<GamificationProvider>().loadAchievements();
+      final gamification = context.read<GamificationProvider>();
+      gamification.loadAchievements();
+      gamification.loadStreakData();
       context.read<DashboardProvider>().loadDashboard();
     });
   }
@@ -32,66 +37,7 @@ class _ImpactDashboardScreenState extends State<ImpactDashboardScreen> {
   ) {
     if (gamification.newlyUnlocked.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) {
-            return Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Image.asset(
-                      'assets/images/mascots/Mascot6.png',
-                      height: 120,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'New Achievement Unlocked!',
-                      style: AppTextStyles.heading.copyWith(
-                        fontSize: 20,
-                        color: AppColors.primary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    AchievementBadge(
-                      achievement: gamification.newlyUnlocked.first,
-                    ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          gamification.clearNewlyUnlocked();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          'Awesome!',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
+        AchievementUnlockedDialog.showSequentially(context, gamification);
       });
     }
   }
@@ -175,7 +121,7 @@ class _ImpactDashboardScreenState extends State<ImpactDashboardScreen> {
                 StreakWidget(
                   streakNumber: gamification.currentStreakWeeks,
                   label: 'Week Streak',
-                  activeDays: gamification.currentStreakWeeks > 0 ? 7 : 0,
+                  activeDays: gamification.filledDaysThisWeek,
                 ),
                 IntrinsicHeight(
                   child: Row(
@@ -186,7 +132,7 @@ class _ImpactDashboardScreenState extends State<ImpactDashboardScreen> {
                           title: 'Money Saved',
                           amount: 'Rp ${moneySaved.toStringAsFixed(0)}',
                           icon: Icons.account_balance_wallet,
-                          iconColor: Colors.blue,
+                          iconColor: AppColors.primary,
                           isCompact: true,
                         ),
                       ),
@@ -195,9 +141,8 @@ class _ImpactDashboardScreenState extends State<ImpactDashboardScreen> {
                         child: ImpactCardWidget(
                           title: 'CO2 Reduced',
                           amount: '${co2Saved.toStringAsFixed(1)} kg',
-                          comparisonText: ImpactCalculator.getRelatableComparison(
-                            co2Saved,
-                          ),
+                          comparisonText:
+                              ImpactCalculator.getRelatableComparison(co2Saved),
                           icon: Icons.eco,
                           iconColor: AppColors.primary,
                           isCompact: true,
@@ -246,22 +191,69 @@ class _ImpactDashboardScreenState extends State<ImpactDashboardScreen> {
                         )
                       else
                         GridView.builder(
+                          padding: EdgeInsets.zero,
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 3,
-                                childAspectRatio: 0.8,
+                                childAspectRatio: 0.95,
                                 crossAxisSpacing: 12,
                                 mainAxisSpacing: 12,
                               ),
-                          itemCount: gamification.achievements.length,
+                          itemCount: _showAllAchievements
+                              ? gamification.achievements.length
+                              : (gamification.achievements.length > 6
+                                    ? 6
+                                    : gamification.achievements.length),
                           itemBuilder: (context, index) {
                             final achievement =
                                 gamification.achievements[index];
                             return AchievementBadge(achievement: achievement);
                           },
                         ),
+                      if (gamification.achievements.length > 6) ...[
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton(
+                            onPressed: () {
+                              setState(() {
+                                _showAllAchievements = !_showAllAchievements;
+                              });
+                            },
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.primary,
+                              side: BorderSide(
+                                color: AppColors.primary.withValues(alpha: 0.3),
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  _showAllAchievements
+                                      ? 'Show less'
+                                      : 'Show all achievements',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Icon(
+                                  _showAllAchievements
+                                      ? Icons.keyboard_arrow_up
+                                      : Icons.keyboard_arrow_down,
+                                  size: 20,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -326,6 +318,7 @@ class _ImpactDashboardScreenState extends State<ImpactDashboardScreen> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 100),
               ],
             ),
           );

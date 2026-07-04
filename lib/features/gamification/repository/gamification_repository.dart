@@ -1,6 +1,7 @@
 import 'package:homesikil/data/remote/supabase_service.dart';
 import 'package:homesikil/errors/failure.dart';
 import 'package:homesikil/features/gamification/models/achievement_model.dart';
+import 'package:homesikil/features/gamification/models/impact_stats_model.dart';
 
 class GamificationRepository {
   final _client = SupabaseService.client;
@@ -41,6 +42,24 @@ class GamificationRepository {
         'achievement_id': achievementId,
         'achieved_at': DateTime.now().toIso8601String(),
       });
+    } catch (e) {
+      throw Failure.fromException(e);
+    }
+  }
+
+  Future<ImpactStatsModel> getImpactStats() async {
+    try {
+      final userId = SupabaseService.currentUserId;
+      final response = await _client
+          .from('user_impact_stats')
+          .select()
+          .eq('user_id', userId)
+          .maybeSingle();
+      
+      if (response == null) {
+        return ImpactStatsModel.empty;
+      }
+      return ImpactStatsModel.fromJson(response);
     } catch (e) {
       throw Failure.fromException(e);
     }

@@ -22,20 +22,24 @@ class AchievementBadge extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(20),
+                  width: 120,
+                  height: 120,
                   decoration: BoxDecoration(
-                    color: achievement.isUnlocked
-                        ? AppColors.primary.withValues(alpha: 0.1)
-                        : Colors.grey.shade100,
+                    color: Colors.transparent,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    Icons.emoji_events,
-                    size: 64,
-                    color: achievement.isUnlocked
-                        ? AppColors.primary
-                        : Colors.grey.shade400,
-                  ),
+                  child: achievement.iconUrl != null
+                      ? Image.asset(
+                          'assets/images/badges/${achievement.iconUrl}${achievement.isUnlocked ? '' : '-locked'}.png',
+                          fit: BoxFit.contain,
+                        )
+                      : Icon(
+                          Icons.emoji_events,
+                          size: 64,
+                          color: achievement.isUnlocked
+                              ? AppColors.primary
+                              : Colors.grey.shade400,
+                        ),
                 ),
                 const SizedBox(height: 24),
                 Text(
@@ -126,29 +130,33 @@ class AchievementBadge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            width: 64,
+            height: 64,
             decoration: BoxDecoration(
-              color: achievement.isUnlocked
-                  ? AppColors.primary
-                  : Colors.grey.shade300,
+              color: Colors.transparent,
               shape: BoxShape.circle,
               boxShadow: [
                 if (achievement.isUnlocked)
                   BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.3),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     spreadRadius: 2,
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
               ],
             ),
-            child: Icon(
-              Icons.emoji_events,
-              color: achievement.isUnlocked
-                  ? Colors.white
-                  : Colors.grey.shade500,
-              size: 32,
-            ),
+            child: achievement.iconUrl != null
+                ? Image.asset(
+                    'assets/images/badges/${achievement.iconUrl}${achievement.isUnlocked ? '' : '-locked'}.png',
+                    fit: BoxFit.contain,
+                  )
+                : Icon(
+                    Icons.emoji_events,
+                    color: achievement.isUnlocked
+                        ? AppColors.primary
+                        : Colors.grey.shade500,
+                    size: 32,
+                  ),
           ),
           const SizedBox(height: 8),
           Text(
