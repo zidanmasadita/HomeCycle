@@ -154,7 +154,13 @@ class DashboardScreen extends StatelessWidget {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.pushReplacementNamed(
+                          context,
+                          AppRoutes.dashboard,
+                          arguments: {'index': 1},
+                        );
+                      },
                       child: Text(
                         'See All',
                         style: AppTextStyles.bodyLarge.copyWith(

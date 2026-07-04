@@ -11,6 +11,7 @@ class GamificationProvider extends ChangeNotifier {
   List<AchievementModel> _achievements = [];
   List<AchievementModel> _newlyUnlocked = [];
   String? _errorMessage;
+  int _currentStreakWeeks = 3; // Mocked data as per backend Task 006
 
   GamificationProvider(this._repository);
 
@@ -18,6 +19,7 @@ class GamificationProvider extends ChangeNotifier {
   List<AchievementModel> get achievements => _achievements;
   List<AchievementModel> get newlyUnlocked => _newlyUnlocked;
   String? get errorMessage => _errorMessage;
+  int get currentStreakWeeks => _currentStreakWeeks;
 
   Future<void> loadAchievements() async {
     _status = GamificationStatus.loading;

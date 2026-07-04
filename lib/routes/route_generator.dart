@@ -12,6 +12,11 @@ import 'package:homesikil/features/onboarding/screens/onboarding_screen.dart';
 import 'package:homesikil/features/recipe_rescue.dart/screens/language_settings_screen.dart';
 import 'package:homesikil/features/recipe_rescue.dart/screens/profile_screen.dart';
 import 'package:homesikil/features/recipe_rescue.dart/screens/settings_screen.dart';
+import 'package:homesikil/features/recipe_rescue.dart/screens/notification_settings_screen.dart';
+import 'package:homesikil/features/recipe_rescue.dart/screens/household_members_screen.dart';
+import 'package:homesikil/features/recipe_rescue.dart/screens/help_support_screen.dart';
+import 'package:homesikil/features/recipe_rescue.dart/screens/about_screen.dart';
+import 'package:homesikil/features/recipe_rescue.dart/screens/edit_profile_screen.dart';
 import 'package:homesikil/features/scan/screens/scan_result_screen.dart';
 import 'package:homesikil/features/scan/screens/scan_screen.dart';
 import 'package:homesikil/splash_screen.dart';
@@ -28,7 +33,8 @@ class RouteGenerator {
       case AppRoutes.onboarding:
         return MaterialPageRoute(builder: (_) => const OnboardingScreen());
       case AppRoutes.dashboard:
-        return MaterialPageRoute(builder: (_) => const MainWrapper());
+        final int index = (settings.arguments as Map<String, dynamic>?)?['index'] as int? ?? 0;
+        return MaterialPageRoute(builder: (_) => MainWrapper(initialIndex: index));
       case AppRoutes.inventory:
         return MaterialPageRoute(builder: (_) => const InventoryScreen());
       case AppRoutes.itemDetail:
@@ -49,6 +55,16 @@ class RouteGenerator {
         return MaterialPageRoute(builder: (_) => const SettingsScreen());
       case AppRoutes.languageSettings:
         return MaterialPageRoute(builder: (_) => const LanguageSettingsScreen());
+      case AppRoutes.notificationSettings:
+        return MaterialPageRoute(builder: (_) => const NotificationSettingsScreen());
+      case AppRoutes.householdMembers:
+        return MaterialPageRoute(builder: (_) => const HouseholdMembersScreen());
+      case AppRoutes.helpSupport:
+        return MaterialPageRoute(builder: (_) => const HelpSupportScreen());
+      case AppRoutes.about:
+        return MaterialPageRoute(builder: (_) => const AboutScreen());
+      case AppRoutes.editProfile:
+        return MaterialPageRoute(builder: (_) => const EditProfileScreen());
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(

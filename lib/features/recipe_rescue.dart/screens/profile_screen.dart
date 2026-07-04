@@ -33,7 +33,9 @@ class ProfileScreen extends StatelessWidget {
             ProfileHeaderCard(
               username: 'Zidan Masadita',
               email: 'zidan@example.com',
-              onEditTap: () {},
+              onEditTap: () {
+                Navigator.pushNamed(context, AppRoutes.editProfile);
+              },
             ),
             const SizedBox(height: 32),
 
@@ -57,12 +59,16 @@ class ProfileScreen extends StatelessWidget {
             ProfileMenuCard(
               icon: Icons.notifications_active_outlined,
               title: 'Notifications Setting',
-              onTap: () {},
+              onTap: () {
+                Navigator.pushNamed(context, AppRoutes.notificationSettings);
+              },
             ),
             ProfileMenuCard(
               icon: Icons.group_outlined,
               title: 'Household Members',
-              onTap: () {},
+              onTap: () {
+                Navigator.pushNamed(context, AppRoutes.householdMembers);
+              },
             ),
 
             const SizedBox(height: 24),
@@ -78,12 +84,16 @@ class ProfileScreen extends StatelessWidget {
             ProfileMenuCard(
               icon: Icons.help_outline,
               title: 'Help & Support',
-              onTap: () {},
+              onTap: () {
+                Navigator.pushNamed(context, AppRoutes.helpSupport);
+              },
             ),
             ProfileMenuCard(
               icon: Icons.info_outline,
               title: 'About HomeCycle',
-              onTap: () {},
+              onTap: () {
+                Navigator.pushNamed(context, AppRoutes.about);
+              },
             ),
 
             const SizedBox(height: 32),

@@ -15,4 +15,9 @@ class AppRoutes {
   static const String profile = '/profile';
   static const String settings = '/settings';
   static const String languageSettings = '/settings/language';
+  static const String notificationSettings = '/settings/notifications';
+  static const String householdMembers = '/settings/household';
+  static const String helpSupport = '/settings/help';
+  static const String about = '/settings/about';
+  static const String editProfile = '/profile/edit';
 }

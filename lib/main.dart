@@ -32,6 +32,8 @@ import 'features/dashboard/provider/dashboard_provider.dart';
 import 'features/gamification/provider/gamification_provider.dart';
 import 'features/profile/provider/profile_provider.dart';
 
+import 'package:homesikil/core/utils/app_snackbar.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
@@ -103,6 +105,7 @@ class HomeCycleApp extends StatelessWidget {
           return MaterialApp(
             title: 'HomeCycle',
             debugShowCheckedModeBanner: false,
+            scaffoldMessengerKey: AppSnackbar.messengerKey,
             localizationsDelegates: context.localizationDelegates,
             supportedLocales: context.supportedLocales,
             locale: context.locale,

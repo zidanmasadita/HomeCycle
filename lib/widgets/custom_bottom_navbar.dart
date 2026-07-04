@@ -44,9 +44,9 @@ class CustomBottomNavbar extends StatelessWidget {
           _buildNavItem(2, Icons.camera_alt_outlined, Icons.camera_alt, 'Scan'),
           _buildNavItem(
             3,
-            Icons.notifications_none_outlined,
-            Icons.notifications,
-            'Notification',
+            Icons.eco_outlined,
+            Icons.eco,
+            'Impact',
           ),
           _buildNavItem(4, Icons.person_outline, Icons.person, 'Profile'),
         ],
