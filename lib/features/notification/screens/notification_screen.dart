@@ -2,37 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:homesikil/core/theme/app_text_styles.dart';
 import 'package:homesikil/core/constants/app_dimens.dart';
 import 'package:homesikil/features/notification/widgets/notification_card.dart';
+import 'package:homesikil/features/notification/provider/notification_provider.dart';
+import 'package:provider/provider.dart';
 
 class NotificationScreen extends StatelessWidget {
   const NotificationScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Mock data
-    final List<Map<String, dynamic>> todayNotifications = [
-      {
-        'title': 'Apple expires tomorrow',
-        'date': 'Today, 09:00 AM',
-        'image': 'assets/images/food-images/apple.png',
-        'isUnread': true,
-      },
-    ];
-
-    final List<Map<String, dynamic>> earlierNotifications = [
-      {
-        'title': 'Cabbage expired yesterday',
-        'date': 'Yesterday, 08:30 AM',
-        'image': 'assets/images/food-images/cabbage.png',
-        'isUnread': false,
-      },
-      {
-        'title': 'Carrot expires in 3 days',
-        'date': '2 days ago',
-        'image': 'assets/images/food-images/carrot.png',
-        'isUnread': false,
-      },
-    ];
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -51,44 +28,66 @@ class NotificationScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppDimens.paddingLarge),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Today',
-              style: AppTextStyles.heading.copyWith(
-                fontSize: 18,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ...todayNotifications.map((notification) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: NotificationCard(notification: notification),
-              );
-            }),
+      body: Consumer<NotificationProvider>(
+        builder: (context, notificationProvider, _) {
+          if (notificationProvider.status == NotificationStatus.loading) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-            const SizedBox(height: 8),
+          final todayNotifications = notificationProvider.todayNotifications;
+          final earlierNotifications = notificationProvider.earlierNotifications;
 
-            Text(
-              'Earlier',
-              style: AppTextStyles.heading.copyWith(
-                fontSize: 18,
-                color: Colors.black87,
+          if (todayNotifications.isEmpty && earlierNotifications.isEmpty) {
+            return const Center(
+              child: Text(
+                'No notifications right now.',
+                style: TextStyle(color: Colors.grey),
               ),
+            );
+          }
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(AppDimens.paddingLarge),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (todayNotifications.isNotEmpty) ...[
+                  Text(
+                    'Today',
+                    style: AppTextStyles.heading.copyWith(
+                      fontSize: 18,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ...todayNotifications.map((notification) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: NotificationCard(notification: notification),
+                    );
+                  }),
+                  const SizedBox(height: 8),
+                ],
+                if (earlierNotifications.isNotEmpty) ...[
+                  Text(
+                    'Earlier',
+                    style: AppTextStyles.heading.copyWith(
+                      fontSize: 18,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ...earlierNotifications.map((notification) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: NotificationCard(notification: notification),
+                    );
+                  }),
+                ],
+              ],
             ),
-            const SizedBox(height: 16),
-            ...earlierNotifications.map((notification) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: NotificationCard(notification: notification),
-              );
-            }),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
