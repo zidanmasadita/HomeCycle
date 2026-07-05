@@ -24,8 +24,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
             // Header
@@ -123,22 +124,23 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     );
                   }
 
-                  return ListView.builder(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppDimens.paddingLarge,
-                    ),
-                    itemCount: displayList.length,
-                    itemBuilder: (context, index) {
-                      final item = displayList[index];
-                      final category = categories.findById(item.categoryId);
-                      return FoodItemCard(item: item, category: category);
-                    },
-                  );
-                },
+                    return ListView.builder(
+                      padding: const EdgeInsets.only(
+                        left: AppDimens.paddingLarge,
+                        right: AppDimens.paddingLarge,
+                        bottom: 80,
+                      ),
+                      itemCount: displayList.length,
+                      itemBuilder: (context, index) {
+                        final item = displayList[index];
+                        final category = categories.findById(item.categoryId);
+                        return FoodItemCard(item: item, category: category);
+                      },
+                    );
+                  },
+                ),
               ),
-            ),
-            const SizedBox(height: 80),
-          ],
+            ],
         ),
       ),
     );

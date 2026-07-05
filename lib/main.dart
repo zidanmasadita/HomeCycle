@@ -66,25 +66,35 @@ class HomeCycleApp extends StatelessWidget {
           create: (_) => CategoryProvider(CategoryRepository())..loadCategories(),
         ),
         ChangeNotifierProvider(
-          create: (_) => InventoryProvider(InventoryRepository()),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => ConsumptionProvider(ConsumptionRepository()),
-        ),
-        ChangeNotifierProvider(
           create: (_) => NotificationProvider(NotificationRepository()),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => DashboardProvider(DashboardRepository()),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => GamificationProvider(GamificationRepository()),
         ),
         ChangeNotifierProvider(
           create: (_) => ProfileProvider(ProfileRepository()),
         ),
         ChangeNotifierProvider(
           create: (_) => HouseholdProvider(HouseholdRepository()),
+        ),
+        
+        // Household Dependent Providers
+        ChangeNotifierProxyProvider<HouseholdProvider, InventoryProvider>(
+          create: (_) => InventoryProvider(InventoryRepository()),
+          update: (_, household, inventory) =>
+              inventory!..updateAdminId(household.adminId),
+        ),
+        ChangeNotifierProxyProvider<HouseholdProvider, ConsumptionProvider>(
+          create: (_) => ConsumptionProvider(ConsumptionRepository()),
+          update: (_, household, consumption) =>
+              consumption!..updateAdminId(household.adminId),
+        ),
+        ChangeNotifierProxyProvider<HouseholdProvider, DashboardProvider>(
+          create: (_) => DashboardProvider(DashboardRepository()),
+          update: (_, household, dashboard) =>
+              dashboard!..updateAdminId(household.adminId),
+        ),
+        ChangeNotifierProxyProvider<HouseholdProvider, GamificationProvider>(
+          create: (_) => GamificationProvider(GamificationRepository()),
+          update: (_, household, gamification) =>
+              gamification!..updateAdminId(household.adminId),
         ),
         
         // Dependent Providers

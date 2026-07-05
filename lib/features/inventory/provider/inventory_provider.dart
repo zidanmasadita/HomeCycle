@@ -13,6 +13,16 @@ class InventoryProvider extends ChangeNotifier {
   InventoryStatus _status = InventoryStatus.initial;
   List<FoodItemModel> _items = [];
   String? _errorMessage;
+  String? _adminId;
+
+  void updateAdminId(String? adminId) {
+    if (_adminId != adminId) {
+      _adminId = adminId;
+      if (_adminId != null) {
+        loadInventory();
+      }
+    }
+  }
 
   InventoryStatus get status => _status;
   List<FoodItemModel> get inventory => _items;
@@ -31,7 +41,14 @@ class InventoryProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _items = await _repository.getInventory(status: 'active');
+      if (_adminId == null) {
+        _items = [];
+      } else {
+        _items = await _repository.getInventory(
+          status: 'active',
+          adminId: _adminId!,
+        );
+      }
       _status = InventoryStatus.loaded;
     } catch (e) {
       _errorMessage = e.toString();
@@ -40,16 +57,16 @@ class InventoryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> addItem(FoodItemModel item) async {
+  Future<FoodItemModel?> addItem(FoodItemModel item) async {
     try {
       final newItem = await _repository.addItem(item);
       _items = [..._items, newItem];
       notifyListeners();
-      return true;
+      return newItem;
     } on Failure catch (e) {
       _errorMessage = e.message;
       notifyListeners();
-      return false;
+      return null;
     }
   }
 
@@ -68,21 +85,32 @@ class InventoryProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> markAsConsumed(String id) async {
-    return _updateStatus(id, 'consumed');
-  }
+  Future<bool> consumeOrWastePartial(
+    FoodItemModel item,
+    String status,
+    double amount,
+  ) async {
+    final newQuantity = item.quantity - amount;
 
-  Future<bool> markAsWasted(String id) async {
-    return _updateStatus(id, 'wasted');
-  }
+    final originalItems = List<FoodItemModel>.from(_items);
+    if (newQuantity <= 0) {
+      _items = _items.where((i) => i.id != item.id).toList();
+    } else {
+      _items = _items
+          .map((i) => i.id == item.id ? i.copyWith(quantity: newQuantity) : i)
+          .toList();
+    }
+    notifyListeners();
 
-  Future<bool> _updateStatus(String id, String status) async {
     try {
-      await _repository.updateStatus(id, status);
-      _items = _items.where((item) => item.id != id).toList();
-      notifyListeners();
+      if (newQuantity <= 0) {
+        await _repository.updateStatus(item.id, status);
+      } else {
+        await _repository.updateQuantity(item.id, newQuantity);
+      }
       return true;
     } on Failure catch (e) {
+      _items = originalItems;
       _errorMessage = e.message;
       notifyListeners();
       return false;

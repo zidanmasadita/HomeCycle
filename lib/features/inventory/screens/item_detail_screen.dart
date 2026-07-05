@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:homesikil/features/category/models/category_model.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:homesikil/core/constants/app_colors.dart';
@@ -11,8 +12,11 @@ import 'package:homesikil/features/inventory/provider/inventory_provider.dart';
 import 'package:homesikil/features/consumption/provider/consumption_provider.dart';
 import 'package:homesikil/features/dashboard/provider/dashboard_provider.dart';
 import 'package:homesikil/features/gamification/provider/gamification_provider.dart';
-import 'package:homesikil/features/consumption/repository/consumption_repository.dart';
+import 'package:homesikil/features/household/provider/household_provider.dart';
 import 'package:homesikil/features/gamification/widgets/achievement_unlocked_dialog.dart';
+import 'package:homesikil/features/inventory/widgets/food_image.dart';
+import 'package:homesikil/features/consumption/repository/consumption_repository.dart';
+import 'package:homesikil/core/utils/app_snackbar.dart';
 
 class ItemDetailScreen extends StatefulWidget {
   final FoodItemModel item;
@@ -24,11 +28,7 @@ class ItemDetailScreen extends StatefulWidget {
 }
 
 class _ItemDetailScreenState extends State<ItemDetailScreen> {
-  bool _isLoading = false;
-
   Future<void> _handleAction(String action) async {
-    setState(() => _isLoading = true);
-
     try {
       final inventory = context.read<InventoryProvider>();
       final consumption = context.read<ConsumptionProvider>();
@@ -39,16 +39,34 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
         (c) => c.id == widget.item.categoryId,
       );
 
+      if (widget.item.quantity <= 1.0 && mounted) {
+        Navigator.pop(context);
+      }
+
+      final actionText = action == 'consumed' ? 'consumed' : 'wasted';
+      AppSnackbar.showSuccess(
+        'Successfully $actionText 1 unit of ${widget.item.customName}',
+      );
+
       bool success = false;
       if (action == 'consumed') {
-        success = await inventory.markAsConsumed(widget.item.id);
+        success = await inventory.consumeOrWastePartial(
+          widget.item,
+          'consumed',
+          1.0,
+        );
       } else {
-        success = await inventory.markAsWasted(widget.item.id);
+        success = await inventory.consumeOrWastePartial(
+          widget.item,
+          'wasted',
+          1.0,
+        );
       }
 
       if (success) {
+        final consumedItem = widget.item.copyWith(quantity: 1.0);
         await consumption.recordConsumption(
-          item: widget.item,
+          item: consumedItem,
           category: category,
           action: action,
         );
@@ -57,7 +75,9 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
 
         if (action == 'consumed') {
           final consumptionRepo = ConsumptionRepository();
-          final streak = await consumptionRepo.getCurrentStreakWeeks();
+          final adminId =
+              context.read<HouseholdProvider>().adminId ?? widget.item.userId;
+          final streak = await consumptionRepo.getCurrentStreakWeeks(adminId);
 
           await gamification.checkAndUnlockAchievements(
             itemsSavedCount: dashboard.impactStats.itemsSaved,
@@ -73,19 +93,17 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
             );
           }
         }
-
-        if (mounted) {
-          Navigator.pop(context);
-        }
       }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+    } finally {}
   }
 
   @override
   Widget build(BuildContext context) {
-    final item = widget.item;
+    final item = context.watch<InventoryProvider>().inventory.firstWhere(
+      (i) => i.id == widget.item.id,
+      orElse: () => widget.item,
+    );
+
     final category = context.read<CategoryProvider>().categories.firstWhere(
       (c) => c.id == item.categoryId,
     );
@@ -133,28 +151,13 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                   height: 250,
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
-                  child: item.imageUrl != null && item.imageUrl!.isNotEmpty
-                      ? Image.network(
-                          item.imageUrl!,
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Image.asset(
-                                category.iconUrl ??
-                                    'assets/images/food-images/apple.png',
-                                fit: BoxFit.contain,
-                              ),
-                        )
-                      : Image.asset(
-                          category.iconUrl ??
-                              'assets/images/food-images/apple.png',
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Icon(
-                                Icons.image,
-                                size: 100,
-                                color: Colors.grey,
-                              ),
-                        ),
+                  child: FoodImage(
+                    item: item,
+                    category: category,
+                    width: double.infinity,
+                    height: 250,
+                    fit: BoxFit.contain,
+                  ),
                 ),
 
                 // Details Card
@@ -247,22 +250,19 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                         width: double.infinity,
                         height: 55,
                         child: ElevatedButton(
-                          onPressed: _isLoading
-                              ? null
-                              : () => _handleAction('consumed'),
+                          onPressed: () => _handleAction('consumed'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
+                              borderRadius: BorderRadius.circular(16),
                             ),
-                            elevation: 0,
                           ),
                           child: const Text(
-                            'Mark as Consumed',
+                            'Consumed',
                             style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
                               color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
@@ -272,24 +272,22 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                         width: double.infinity,
                         height: 55,
                         child: OutlinedButton(
-                          onPressed: _isLoading
-                              ? null
-                              : () => _handleAction('wasted'),
+                          onPressed: () => _handleAction('wasted'),
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(
-                              color: AppColors.red,
+                              color: Colors.redAccent,
                               width: 1.5,
                             ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
+                              borderRadius: BorderRadius.circular(16),
                             ),
                           ),
                           child: const Text(
-                            'Mark as Wasted',
+                            'Wasted',
                             style: TextStyle(
-                              fontSize: 18,
+                              color: Colors.redAccent,
+                              fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.red,
                             ),
                           ),
                         ),
@@ -301,11 +299,6 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
               ],
             ),
           ),
-          if (_isLoading)
-            Container(
-              color: Colors.black.withValues(alpha: 0.3),
-              child: const Center(child: CircularProgressIndicator()),
-            ),
         ],
       ),
     );

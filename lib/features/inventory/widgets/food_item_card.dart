@@ -7,6 +7,7 @@ import 'package:homesikil/core/constants/app_colors.dart';
 import 'package:homesikil/core/constants/app_assets.dart';
 import 'package:homesikil/features/inventory/models/food_item_model.dart';
 import 'package:homesikil/features/category/models/category_model.dart';
+import 'package:homesikil/features/inventory/widgets/food_image.dart';
 
 class FoodItemCard extends StatelessWidget {
   final FoodItemModel item;
@@ -18,7 +19,7 @@ class FoodItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.pushNamed(context, AppRoutes.itemDetail);
+        Navigator.pushNamed(context, AppRoutes.itemDetail, arguments: item);
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -46,10 +47,15 @@ class FoodItemCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 color: Colors.grey.shade50,
               ),
-              child: Image.asset(
-                item.imageUrl ?? category?.iconUrl ?? AppAssets.logo,
-                errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.image, color: Colors.grey),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: FoodImage(
+                  item: item,
+                  category: category,
+                  width: 60,
+                  height: 60,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
             const SizedBox(width: 16),

@@ -25,8 +25,8 @@ class Failure implements Exception {
         errorString.contains('ClientException')) {
       return const Failure('No internet connection.', code: 'network_error');
     }
-    return const Failure(
-      'An unexpected error occurred. Please try again.',
+    return Failure(
+      'An unexpected error occurred: $errorString',
       code: 'unknown_error',
     );
   }

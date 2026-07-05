@@ -6,10 +6,12 @@ class InventoryRepository {
   final _client = SupabaseService.client;
   static const _table = 'food_items';
 
-  Future<List<FoodItemModel>> getInventory({String? status}) async {
+  Future<List<FoodItemModel>> getInventory({
+    String? status,
+    required String adminId,
+  }) async {
     try {
-      final userId = SupabaseService.currentUserId;
-      var query = _client.from(_table).select().eq('user_id', userId);
+      var query = _client.from(_table).select().eq('user_id', adminId);
 
       if (status != null) {
         query = query.eq('actual_status', status);
@@ -59,6 +61,14 @@ class InventoryRepository {
           .select()
           .single();
       return FoodItemModel.fromJson(response);
+    } catch (e) {
+      throw Failure.fromException(e);
+    }
+  }
+
+  Future<void> updateQuantity(String id, double quantity) async {
+    try {
+      await _client.from(_table).update({'quantity': quantity}).eq('id', id);
     } catch (e) {
       throw Failure.fromException(e);
     }
