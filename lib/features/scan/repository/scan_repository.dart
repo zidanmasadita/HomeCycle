@@ -12,10 +12,10 @@ class ScanRepository {
   Future<String> uploadScanPhoto({
     required Uint8List imageBytes,
     required String fileName,
+    required String adminId,
   }) async {
     try {
-      final userId = SupabaseService.currentUserId;
-      final path = '$userId/$fileName';
+      final path = '$adminId/$fileName';
       
       await _client.storage.from(_bucket).uploadBinary(
         path,
@@ -33,15 +33,13 @@ class ScanRepository {
     required ScanResultModel result,
     String? foodItemId,
     required bool savedToInventory,
+    required String adminId,
   }) async {
     try {
-      final userId = SupabaseService.currentUserId;
-      
       await _client.from(_table).insert({
-        'user_id': userId,
+        'user_id': adminId,
         'detected_label': result.detectedLabel,
         'confidence_score': result.confidenceScore,
-        'condition': result.condition,
         'category_id': result.categoryId,
         'food_item_id': foodItemId,
         'was_saved_to_inventory': savedToInventory,

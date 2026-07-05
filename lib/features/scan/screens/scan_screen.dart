@@ -20,6 +20,9 @@ class _ScanScreenState extends State<ScanScreen> {
   void initState() {
     super.initState();
     _initializeCamera();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ScanProvider>().initModel();
+    });
   }
 
   Future<void> _initializeCamera() async {
@@ -34,14 +37,30 @@ class _ScanScreenState extends State<ScanScreen> {
 
       _controller = CameraController(
         backCamera,
-        ResolutionPreset.high,
+        ResolutionPreset.medium,
         enableAudio: false,
+        imageFormatGroup: ImageFormatGroup.yuv420,
       );
 
       await _controller!.initialize();
+
+      try {
+        // Reduce camera exposure brightness to prevent overexposed images
+        await _controller!.setExposureOffset(-1.5);
+      } catch (e) {
+        debugPrint('Could not set exposure offset: $e');
+      }
+
       if (mounted) {
         setState(() {
           _isCameraInitialized = true;
+        });
+
+        // Start live stream
+        _controller!.startImageStream((CameraImage image) {
+          if (mounted) {
+            context.read<ScanProvider>().processCameraFrame(image);
+          }
         });
       }
     } catch (e) {
@@ -49,35 +68,36 @@ class _ScanScreenState extends State<ScanScreen> {
     }
   }
 
-  Future<void> _takePicture() async {
+  Future<void> _captureLiveResult() async {
     if (_controller == null || !_controller!.value.isInitialized) return;
 
     try {
       final scanProvider = context.read<ScanProvider>();
-      
-      final XFile imageFile = await _controller!.takePicture();
-      final imageBytes = await imageFile.readAsBytes();
+      if (scanProvider.liveResult == null) return;
 
-      // Show a loading dialog
+      // Stop the image stream to freeze the camera and stop processing
+      await _controller!.stopImageStream();
+
+      // Show a loading dialog just in case
       if (mounted) {
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => const Center(
-            child: CircularProgressIndicator(),
-          ),
+          builder: (context) =>
+              const Center(child: CircularProgressIndicator()),
         );
       }
 
-      await scanProvider.captureAndScan(imageBytes);
+      // Capture the current live result as the final result
+      scanProvider.captureLiveResult();
 
-      // Close loading dialog
+      // Close loading dialog and navigate
       if (mounted) {
         Navigator.pop(context);
         Navigator.pushReplacementNamed(context, AppRoutes.scanResult);
       }
     } catch (e) {
-      debugPrint('Error taking picture: $e');
+      debugPrint('Error capturing result: $e');
     }
   }
 
@@ -110,10 +130,8 @@ class _ScanScreenState extends State<ScanScreen> {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          SizedBox.expand(
-            child: CameraPreview(_controller!),
-          ),
-          
+          SizedBox.expand(child: CameraPreview(_controller!)),
+
           // Back button
           Positioned(
             top: 48,
@@ -121,6 +139,57 @@ class _ScanScreenState extends State<ScanScreen> {
             child: IconButton(
               icon: const Icon(Icons.close, color: Colors.white, size: 30),
               onPressed: () => Navigator.pop(context),
+            ),
+          ),
+
+          // Live Result Overlay
+          Positioned(
+            top: 100,
+            left: 0,
+            right: 0,
+            child: Consumer<ScanProvider>(
+              builder: (context, provider, child) {
+                final result = provider.liveResult;
+                if (result == null) return const SizedBox.shrink();
+
+                final confidence = (result.confidenceScore * 100)
+                    .toStringAsFixed(1);
+
+                return Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.7),
+                      borderRadius: BorderRadius.circular(30),
+                      border: Border.all(color: AppColors.primary, width: 2),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          result.detectedLabel.toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Confidence: $confidence%',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.8),
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           ),
 
@@ -136,7 +205,7 @@ class _ScanScreenState extends State<ScanScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   GestureDetector(
-                    onTap: _takePicture,
+                    onTap: _captureLiveResult,
                     child: Container(
                       height: 80,
                       width: 80,

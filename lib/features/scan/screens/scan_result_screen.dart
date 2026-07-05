@@ -5,12 +5,21 @@ import 'package:homesikil/core/theme/app_text_styles.dart';
 import 'package:homesikil/routes/app_routes.dart';
 import 'package:homesikil/core/utils/app_snackbar.dart';
 import 'package:homesikil/features/scan/provider/scan_provider.dart';
+import 'package:homesikil/features/category/provider/category_provider.dart';
+import 'package:homesikil/features/household/provider/household_provider.dart';
 import 'package:homesikil/features/inventory/models/food_item_model.dart';
 import 'package:homesikil/features/auth/provider/auth_provider.dart';
 import 'package:uuid/uuid.dart';
 
-class ScanResultScreen extends StatelessWidget {
+class ScanResultScreen extends StatefulWidget {
   const ScanResultScreen({super.key});
+
+  @override
+  State<ScanResultScreen> createState() => _ScanResultScreenState();
+}
+
+class _ScanResultScreenState extends State<ScanResultScreen> {
+  double _quantity = 1.0;
 
   @override
   Widget build(BuildContext context) {
@@ -18,10 +27,25 @@ class ScanResultScreen extends StatelessWidget {
     final result = scanProvider.lastResult;
 
     if (result == null) {
-      return const Scaffold(body: Center(child: Text("No result found")));
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Scan Result'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        body: Center(
+          child: Text(scanProvider.errorMessage ?? "No result found"),
+        ),
+      );
     }
 
     final confidencePercent = (result.confidenceScore * 100).toStringAsFixed(0);
+    final rawName = result.detectedLabel;
+    final capitalizedName = rawName.isNotEmpty
+        ? '${rawName[0].toUpperCase()}${rawName.substring(1)}'
+        : rawName;
 
     final expirationDays = 7;
 
@@ -87,7 +111,7 @@ class ScanResultScreen extends StatelessWidget {
                         _buildDetailRow(
                           Icons.restaurant,
                           'Food Name',
-                          result.detectedLabel,
+                          capitalizedName,
                         ),
                         const SizedBox(height: 16),
                         _buildDetailRow(
@@ -101,6 +125,46 @@ class ScanResultScreen extends StatelessWidget {
                           Icons.calendar_today,
                           'Estimated Expiry',
                           '$expirationDays Days',
+                        ),
+                        const SizedBox(height: 16),
+                        _buildDetailRow(
+                          Icons.shopping_basket,
+                          'Quantity',
+                          '',
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                onPressed: () {
+                                  if (_quantity > 1) {
+                                    setState(() => _quantity--);
+                                  }
+                                },
+                                icon: const Icon(Icons.remove_circle_outline),
+                                color: AppColors.primary,
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                '${_quantity.toInt()} Pcs',
+                                style: AppTextStyles.title.copyWith(
+                                  fontSize: 16,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              IconButton(
+                                onPressed: () {
+                                  setState(() => _quantity++);
+                                },
+                                icon: const Icon(Icons.add_circle_outline),
+                                color: AppColors.primary,
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              ),
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 16),
                         _buildDetailRow(Icons.category, 'Category', 'Detected'),
@@ -138,18 +202,28 @@ class ScanResultScreen extends StatelessWidget {
                               final user = context
                                   .read<AuthProvider>()
                                   .currentUser;
-                              if (user == null) return;
+                              final adminId = context
+                                  .read<HouseholdProvider>()
+                                  .adminId;
+                              final ownerId = adminId ?? user?.id;
+                              if (ownerId == null) return;
+
+                              final categories = context
+                                  .read<CategoryProvider>()
+                                  .categories;
+                              final fallbackCategoryId = categories.isNotEmpty
+                                  ? categories.first.id
+                                  : '';
 
                               final item = FoodItemModel(
                                 id: Uuid().v4(),
-                                userId: user.id,
+                                userId: ownerId,
                                 categoryId:
-                                    result.categoryId ??
-                                    'uuid-of-other-category',
-                                customName: result.detectedLabel,
+                                    result.categoryId ?? fallbackCategoryId,
+                                customName: capitalizedName,
                                 condition: 'fresh',
                                 confidenceScore: result.confidenceScore,
-                                quantity: 1,
+                                quantity: _quantity,
                                 unit: 'pcs',
                                 storageLocation: 'fridge',
                                 scannedAt: DateTime.now(),
@@ -163,7 +237,10 @@ class ScanResultScreen extends StatelessWidget {
 
                               final success = await context
                                   .read<ScanProvider>()
-                                  .confirmAndSave(item: item);
+                                  .confirmAndSave(
+                                    item: item,
+                                    adminId: ownerId,
+                                  );
 
                               if (success && context.mounted) {
                                 Navigator.pushNamedAndRemoveUntil(
@@ -243,6 +320,7 @@ class ScanResultScreen extends StatelessWidget {
     String label,
     String value, {
     Color? color,
+    Widget? trailing,
   }) {
     return Row(
       children: [
@@ -260,13 +338,14 @@ class ScanResultScreen extends StatelessWidget {
           style: AppTextStyles.bodyMedium.copyWith(color: Colors.grey.shade600),
         ),
         const Spacer(),
-        Text(
-          value,
-          style: AppTextStyles.title.copyWith(
-            fontSize: 16,
-            color: Colors.black87,
-          ),
-        ),
+        trailing ??
+            Text(
+              value,
+              style: AppTextStyles.title.copyWith(
+                fontSize: 16,
+                color: Colors.black87,
+              ),
+            ),
       ],
     );
   }
