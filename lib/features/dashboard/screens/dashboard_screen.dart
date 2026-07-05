@@ -11,7 +11,7 @@ import 'package:homesikil/features/category/provider/category_provider.dart';
 import 'package:homesikil/routes/app_routes.dart';
 import 'package:provider/provider.dart';
 import 'package:homesikil/features/notification/provider/notification_provider.dart';
-import 'package:provider/provider.dart';
+
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -236,18 +236,14 @@ class DashboardScreen extends StatelessWidget {
                           final category = categoryProvider.findById(
                             item.categoryId,
                           );
-                          final imagePath =
-                              item.imageUrl ??
-                              category?.iconUrl ??
-                              AppAssets.logo;
-
                           return ExpiringSoonCard(
+                            item: item,
+                            category: category,
                             title:
                                 item.customName ??
                                 category?.name ??
                                 'Unknown Item',
                             daysLeft: '${item.daysUntilExpiration} Days Left',
-                            imagePath: imagePath,
                             badgeColor: item.daysUntilExpiration == 0
                                 ? Colors.red
                                 : AppColors.yellow,

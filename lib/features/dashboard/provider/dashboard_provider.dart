@@ -10,6 +10,16 @@ class DashboardProvider extends ChangeNotifier {
   DashboardStatus _status = DashboardStatus.initial;
   ImpactStatsModel _impactStats = ImpactStatsModel.empty();
   String? _errorMessage;
+  String? _adminId;
+
+  void updateAdminId(String? adminId) {
+    if (_adminId != adminId) {
+      _adminId = adminId;
+      if (_adminId != null) {
+        loadDashboard();
+      }
+    }
+  }
 
   DashboardProvider(this._repository);
 
@@ -23,7 +33,11 @@ class DashboardProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _impactStats = await _repository.getImpactStats();
+      if (_adminId == null) {
+        _impactStats = ImpactStatsModel.empty();
+      } else {
+        _impactStats = await _repository.getImpactStats(_adminId!);
+      }
       _status = DashboardStatus.success;
     } catch (e) {
       _errorMessage = e.toString();

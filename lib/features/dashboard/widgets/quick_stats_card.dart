@@ -4,8 +4,9 @@ import 'package:homesikil/core/constants/app_assets.dart';
 import 'package:homesikil/core/constants/app_dimens.dart';
 import 'package:homesikil/core/theme/app_text_styles.dart';
 import 'package:homesikil/features/inventory/provider/inventory_provider.dart';
-import 'package:homesikil/features/gamification/provider/gamification_provider.dart';
+import 'package:homesikil/features/dashboard/provider/dashboard_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 
 class QuickStatsCard extends StatelessWidget {
   const QuickStatsCard({super.key});
@@ -13,12 +14,16 @@ class QuickStatsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final inventory = context.watch<InventoryProvider>();
-    final gamification = context.watch<GamificationProvider>();
+    final dashboard = context.watch<DashboardProvider>();
 
-    final inventoryCount = inventory.inventory.length;
-    final expiringSoonCount = inventory.expiringSoonItems.length;
-    final moneySaved = gamification.impactStats.totalMoneySaved;
-    final co2Saved = gamification.impactStats.totalCo2Saved;
+    final inventoryCount = inventory.inventory
+        .fold<double>(0, (sum, item) => sum + item.quantity)
+        .toInt();
+    final expiringSoonCount = inventory.expiringSoonItems
+        .fold<double>(0, (sum, item) => sum + item.quantity)
+        .toInt();
+    final moneySaved = dashboard.impactStats.totalMoneySaved;
+    final co2Saved = dashboard.impactStats.totalCo2Saved;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -78,8 +83,7 @@ class QuickStatsCard extends StatelessWidget {
                     Expanded(
                       child: _buildStatItem(
                         title: 'Saved Money',
-                        value: 'Rp ${moneySaved.toStringAsFixed(0)}',
-                        iconPath: AppAssets.coin,
+                        value: NumberFormat.currency(locale: 'id_ID', symbol: 'Rp', decimalDigits: 0).format(moneySaved),
                       ),
                     ),
                     _buildVerticalDivider(),
@@ -87,7 +91,6 @@ class QuickStatsCard extends StatelessWidget {
                       child: _buildStatItem(
                         title: 'CO² Saved',
                         value: '${co2Saved.toStringAsFixed(1)} kg',
-                        iconPath: AppAssets.leaf,
                         showInfo: true,
                       ),
                     ),
@@ -139,16 +142,18 @@ class QuickStatsCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Flexible(
-                child: Text(
-                  value,
-                  style: AppTextStyles.title.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                    height: 1.1,
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    value,
+                    style: AppTextStyles.title.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                      height: 1.1,
+                    ),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               if (subtitle != null) ...[

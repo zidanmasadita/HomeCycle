@@ -17,6 +17,13 @@ class ConsumptionProvider extends ChangeNotifier {
 
   ConsumptionStatus _status = ConsumptionStatus.initial;
   String? _errorMessage;
+  String? _adminId;
+
+  void updateAdminId(String? adminId) {
+    if (_adminId != adminId) {
+      _adminId = adminId;
+    }
+  }
 
   ConsumptionStatus get status => _status;
   String? get errorMessage => _errorMessage;
@@ -33,7 +40,7 @@ class ConsumptionProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final userId = SupabaseService.currentUserId;
+      final userId = _adminId ?? SupabaseService.currentUserId;
       
       final quantityKg = UnitConverter.toKg(
         quantity: item.quantity,

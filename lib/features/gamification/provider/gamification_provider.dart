@@ -16,6 +16,16 @@ class GamificationProvider extends ChangeNotifier {
   String? _errorMessage;
   int _currentStreakWeeks = 0;
   int _filledDaysThisWeek = 0;
+  String? _adminId;
+
+  void updateAdminId(String? adminId) {
+    if (_adminId != adminId) {
+      _adminId = adminId;
+      if (_adminId != null) {
+        loadStreakData();
+      }
+    }
+  }
 
   GamificationProvider(this._repository);
 
@@ -60,9 +70,14 @@ class GamificationProvider extends ChangeNotifier {
 
   Future<void> loadStreakData() async {
     try {
-      final consumptionRepo = ConsumptionRepository();
-      _currentStreakWeeks = await consumptionRepo.getCurrentStreakWeeks();
-      _filledDaysThisWeek = await consumptionRepo.getFilledDaysThisWeek();
+      if (_adminId == null) {
+        _currentStreakWeeks = 0;
+        _filledDaysThisWeek = 0;
+      } else {
+        final consumptionRepo = ConsumptionRepository();
+        _currentStreakWeeks = await consumptionRepo.getCurrentStreakWeeks(_adminId!);
+        _filledDaysThisWeek = await consumptionRepo.getFilledDaysThisWeek(_adminId!);
+      }
       notifyListeners();
     } catch (e) {
       _currentStreakWeeks = 0;

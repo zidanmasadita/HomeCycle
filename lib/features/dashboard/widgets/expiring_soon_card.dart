@@ -4,18 +4,24 @@ import 'package:homesikil/core/constants/app_colors.dart';
 import 'package:homesikil/core/constants/app_dimens.dart';
 import 'package:homesikil/core/theme/app_text_styles.dart';
 
+import 'package:homesikil/features/inventory/models/food_item_model.dart';
+import 'package:homesikil/features/category/models/category_model.dart';
+import 'package:homesikil/features/inventory/widgets/food_image.dart';
+
 class ExpiringSoonCard extends StatelessWidget {
+  final FoodItemModel item;
+  final CategoryModel? category;
   final String title;
   final String daysLeft;
-  final String imagePath;
   final String badgeText;
   final Color badgeColor;
 
   const ExpiringSoonCard({
     super.key,
+    required this.item,
+    this.category,
     required this.title,
     required this.daysLeft,
-    required this.imagePath,
     this.badgeText = 'Soon',
     this.badgeColor = Colors.yellow,
   });
@@ -39,20 +45,14 @@ class ExpiringSoonCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Item Image
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.asset(
-              imagePath,
+            child: FoodImage(
+              item: item,
+              category: category,
               width: 60,
               height: 60,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                width: 60,
-                height: 60,
-                color: Colors.orange.shade100,
-                child: const Icon(Icons.fastfood, color: Colors.orange),
-              ),
             ),
           ),
           const SizedBox(width: 16),

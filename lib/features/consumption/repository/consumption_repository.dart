@@ -17,10 +17,10 @@ class ConsumptionRepository {
   Future<List<ConsumptionLogModel>> getLogsByUser({
     DateTime? from,
     DateTime? to,
+    required String adminId,
   }) async {
     try {
-      final userId = SupabaseService.currentUserId;
-      var query = _client.from(_table).select().eq('user_id', userId);
+      var query = _client.from(_table).select().eq('user_id', adminId);
 
       if (from != null) {
         query = query.gte('logged_at', from.toIso8601String());
@@ -41,9 +41,9 @@ class ConsumptionRepository {
     }
   }
 
-  Future<int> getCurrentStreakWeeks() async {
+  Future<int> getCurrentStreakWeeks(String adminId) async {
     try {
-      final logs = await getLogsByUser();
+      final logs = await getLogsByUser(adminId: adminId);
       if (logs.isEmpty) return 0;
 
       int streak = 0;
@@ -88,7 +88,7 @@ class ConsumptionRepository {
     }
   }
 
-  Future<int> getFilledDaysThisWeek() async {
+  Future<int> getFilledDaysThisWeek(String adminId) async {
     try {
       DateTime now = DateTime.now();
       DateTime currentWeekStart = now.subtract(Duration(days: now.weekday - 1));
@@ -98,7 +98,10 @@ class ConsumptionRepository {
         currentWeekStart.day,
       );
 
-      final logs = await getLogsByUser(from: currentWeekStart);
+      final logs = await getLogsByUser(
+        from: currentWeekStart,
+        adminId: adminId,
+      );
       if (logs.isEmpty) return 0;
 
       Map<int, bool> dayHasWaste = {};

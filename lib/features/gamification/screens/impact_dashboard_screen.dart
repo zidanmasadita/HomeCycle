@@ -197,7 +197,7 @@ class _ImpactDashboardScreenState extends State<ImpactDashboardScreen> {
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 3,
-                                childAspectRatio: 0.95,
+                                childAspectRatio: 0.75,
                                 crossAxisSpacing: 12,
                                 mainAxisSpacing: 12,
                               ),
