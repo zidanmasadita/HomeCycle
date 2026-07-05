@@ -8,6 +8,7 @@ import 'package:homesikil/core/theme/app_text_styles.dart';
 import 'package:homesikil/core/utils/app_snackbar.dart';
 import 'package:homesikil/core/utils/validators.dart';
 import 'package:homesikil/features/auth/provider/auth_provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:homesikil/routes/app_routes.dart';
 import 'register_screen.dart';
 
@@ -83,11 +84,13 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      resizeToAvoidBottomInset: false,
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        child: Builder(
+          builder: (context) {
+            final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
             // Logo
             Padding(
               padding: const EdgeInsets.only(left: 20.0, top: 10.0),
@@ -115,33 +118,42 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
 
             // Welcome Text and Mascot
-            Padding(
-              padding: const EdgeInsets.only(left: 30.0, right: 0.0, top: 10.0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 40.0),
-                      child: Text(
-                        "Welcome\nback, Mate!",
-                        style: AppTextStyles.displayLarge,
+            if (!isKeyboardOpen)
+              Padding(
+                padding: const EdgeInsets.only(left: 30.0, right: 0.0, top: 10.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 20.0),
+                        child: Text(
+                          "Welcome\nback, Mate!",
+                          style: AppTextStyles.displayLarge,
+                        ),
                       ),
                     ),
-                  ),
-                  Transform.translate(
-                    offset: const Offset(0, 45),
-                    child: Image.asset(
-                      AppAssets.mascot2,
-                      height: 250,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const SizedBox(height: 250, width: 150),
+                    Transform.translate(
+                      offset: const Offset(0, 30),
+                      child: Image.asset(
+                        AppAssets.mascot2,
+                        height: 180,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const SizedBox(height: 180, width: 150),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.only(left: 30.0, bottom: 20.0, top: 20.0),
+                child: Text(
+                  "Welcome\nback, Mate!",
+                  style: AppTextStyles.displayLarge,
+                ),
               ),
-            ),
 
             // Bottom Sheet Area
             Expanded(
@@ -179,7 +191,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         child: SingleChildScrollView(
-                          physics: const NeverScrollableScrollPhysics(),
+                          physics: const BouncingScrollPhysics(),
                           padding: const EdgeInsets.symmetric(
                             horizontal: 24.0,
                             vertical: 30.0,
@@ -385,8 +397,10 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ],
-        ),
-      ),
+        );
+      },
+    ),
+  ),
     );
   }
 
@@ -409,24 +423,10 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         child: Center(
           child: isGoogle
-              ? const Text(
-                  'G',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red,
-                  ),
-                )
+              ? SvgPicture.asset('assets/images/icons/google.svg', width: 32, height: 32)
               : isDiscord
-              ? const Text(
-                  'D',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.indigo,
-                  ),
-                )
-              : Icon(icon, color: color, size: 36),
+                  ? SvgPicture.asset('assets/images/icons/discord.svg', width: 32, height: 32)
+                  : Icon(icon, color: color, size: 36),
         ),
       ),
     );
