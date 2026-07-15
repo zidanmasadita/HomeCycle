@@ -257,7 +257,7 @@ erDiagram
     }
 
     user_preferences {
-        uuid user_id PK_FK
+        uuid user_id PK
         int notify_days_before_expiry
         int household_size
         text preferred_units
@@ -1066,29 +1066,8 @@ SUPABASE_ANON_KEY=<ANON_KEY>
 
 >  **JANGAN pernah commit `SUPABASE_SERVICE_ROLE_KEY`** ke repository. Key ini hanya digunakan di Edge Function server-side.
 
----
-
-## Kontribusi
-
-### Aturan Perubahan Schema Database
-
-- **Selalu buat file migration baru**, jangan edit file yang sudah di-apply ke production
-- Format nama file: `NNN_deskripsi_singkat.sql` (nomor urut 3 digit)
-- Setiap migration tabel personal **wajib** langsung menyertakan RLS policy
-- Sebelum mengubah kolom, cek semua `fromJson`/`toJson` di `lib/features/*/models/`
-
-### Checklist Sebelum PR
-
-- [ ] Migration dijalankan tanpa error
-- [ ] RLS aktif di semua tabel personal
-- [ ] Seed data tersinkron dengan label model TFLite
-- [ ] Widget test tidak rusak (`flutter test`)
-- [ ] Tidak ada debug print yang tertinggal
-
----
-
 <div align="center">
 
-**HomeCycle** — _Kurangi food waste, mulai dari dapur rumahmu_ 
+**HomeCycle** — _Kurangi food waste, mulai dari dapur rumahmu_
 
 </div>
