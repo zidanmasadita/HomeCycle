@@ -68,11 +68,23 @@ class ScanProvider extends ChangeNotifier {
           .firstOrNull;
 
       _liveResult = result.copyWith(categoryId: category?.id);
+      _errorMessage = null;
       notifyListeners();
-    } catch (e) {
-      debugPrint('Live scan error: $e');
+    } catch (e, stacktrace) {
+      debugPrint('Live scan error: $e\n$stacktrace');
+      _errorMessage = 'Error: $e';
+      notifyListeners();
     } finally {
+      // Add a cool-down delay to reduce CPU usage and fix lag
+      await Future.delayed(const Duration(milliseconds: 500));
       _isProcessingFrame = false;
+    }
+  }
+
+  void setLiveResultImage(Uint8List bytes) {
+    if (_liveResult != null) {
+      _liveResult = _liveResult!.copyWith(imageBytes: bytes);
+      notifyListeners();
     }
   }
 

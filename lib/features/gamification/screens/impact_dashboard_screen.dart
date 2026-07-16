@@ -5,10 +5,12 @@ import 'package:homesikil/core/theme/app_text_styles.dart';
 import 'package:homesikil/core/utils/impact_calculator.dart';
 import 'package:homesikil/features/gamification/provider/gamification_provider.dart';
 import 'package:homesikil/features/dashboard/provider/dashboard_provider.dart';
+import 'package:homesikil/features/inventory/provider/inventory_provider.dart';
 import 'package:homesikil/features/gamification/widgets/impact_card_widget.dart';
 import 'package:homesikil/features/gamification/widgets/streak_widget.dart';
 import 'package:homesikil/features/gamification/widgets/achievement_badge.dart';
 import 'package:homesikil/features/gamification/widgets/achievement_unlocked_dialog.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ImpactDashboardScreen extends StatefulWidget {
   const ImpactDashboardScreen({super.key});
@@ -28,6 +30,7 @@ class _ImpactDashboardScreenState extends State<ImpactDashboardScreen> {
       gamification.loadAchievements();
       gamification.loadStreakData();
       context.read<DashboardProvider>().loadDashboard();
+      context.read<InventoryProvider>().loadInventory();
     });
   }
 
@@ -44,6 +47,7 @@ class _ImpactDashboardScreenState extends State<ImpactDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    context.locale; // Force rebuild on locale change
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -51,7 +55,7 @@ class _ImpactDashboardScreenState extends State<ImpactDashboardScreen> {
         elevation: 0,
         automaticallyImplyLeading: false,
         title: Text(
-          'Your Impact',
+          'gamification.your_impact'.tr(),
           style: AppTextStyles.heading.copyWith(
             fontSize: 22,
             color: Colors.black87,
@@ -59,16 +63,27 @@ class _ImpactDashboardScreenState extends State<ImpactDashboardScreen> {
         ),
         centerTitle: true,
       ),
-      body: Consumer2<GamificationProvider, DashboardProvider>(
-        builder: (context, gamification, dashboard, child) {
+      body: Consumer3<GamificationProvider, DashboardProvider, InventoryProvider>(
+        builder: (context, gamification, dashboard, inventory, child) {
           _checkNewlyUnlocked(context, gamification);
 
           final impactStats = dashboard.impactStats;
           final moneySaved = impactStats.totalMoneySaved;
           final co2Saved = impactStats.totalCo2Saved;
+          
+          final expiredItems = inventory.expiredItems;
+          final hasExpiredItems = expiredItems.isNotEmpty;
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+          return RefreshIndicator(
+            onRefresh: () async {
+              await context.read<GamificationProvider>().loadImpactStats();
+              await context.read<GamificationProvider>().loadAchievements();
+              await context.read<DashboardProvider>().loadDashboard();
+              await context.read<InventoryProvider>().loadInventory();
+            },
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -77,17 +92,27 @@ class _ImpactDashboardScreenState extends State<ImpactDashboardScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
+                    color: hasExpiredItems ? Colors.red.withValues(alpha: 0.1) : AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.2),
+                      color: hasExpiredItems ? Colors.red.withValues(alpha: 0.3) : AppColors.primary.withValues(alpha: 0.2),
                     ),
                   ),
                   child: Row(
                     children: [
-                      Image.asset(
-                        'assets/images/mascots/Mascot6.png',
-                        height: 100,
+                      ColorFiltered(
+                        colorFilter: hasExpiredItems 
+                          ? const ColorFilter.matrix([
+                              0.33, 0.59, 0.11, 0, 0,
+                              0.33, 0.59, 0.11, 0, 0,
+                              0.33, 0.59, 0.11, 0, 0,
+                              0,    0,    0,    1, 0,
+                            ])
+                          : const ColorFilter.mode(Colors.transparent, BlendMode.multiply),
+                        child: Image.asset(
+                          'assets/images/mascots/Mascot6.png',
+                          height: 100,
+                        ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -95,15 +120,17 @@ class _ImpactDashboardScreenState extends State<ImpactDashboardScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Great Job!',
+                              hasExpiredItems ? 'gamification.oh_no'.tr() : 'gamification.great_job'.tr(),
                               style: AppTextStyles.heading.copyWith(
                                 fontSize: 20,
-                                color: AppColors.primary,
+                                color: hasExpiredItems ? Colors.red.shade700 : AppColors.primary,
                               ),
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'By rescuing ${impactStats.itemsSaved} items, you\'ve saved Rp ${moneySaved.toStringAsFixed(0)} and reduced ${co2Saved.toStringAsFixed(1)} kg of CO2.',
+                              hasExpiredItems 
+                                ? 'gamification.expired_items_msg'.tr(args: [expiredItems.length.toString()])
+                                : 'gamification.rescued_items_msg'.tr(args: [impactStats.itemsSaved.toString(), moneySaved.toStringAsFixed(0), co2Saved.toStringAsFixed(1)]),
                               style: AppTextStyles.bodyMedium.copyWith(
                                 color: Colors.grey.shade800,
                                 height: 1.4,
@@ -120,7 +147,7 @@ class _ImpactDashboardScreenState extends State<ImpactDashboardScreen> {
                 // Streak
                 StreakWidget(
                   streakNumber: gamification.currentStreakWeeks,
-                  label: 'Week Streak',
+                  label: 'gamification.week_streak'.tr(),
                   activeDays: gamification.filledDaysThisWeek,
                 ),
                 IntrinsicHeight(
@@ -129,7 +156,7 @@ class _ImpactDashboardScreenState extends State<ImpactDashboardScreen> {
                     children: [
                       Expanded(
                         child: ImpactCardWidget(
-                          title: 'Money Saved',
+                          title: 'gamification.money_saved'.tr(),
                           amount: 'Rp ${moneySaved.toStringAsFixed(0)}',
                           icon: Icons.account_balance_wallet,
                           iconColor: AppColors.primary,
@@ -139,7 +166,7 @@ class _ImpactDashboardScreenState extends State<ImpactDashboardScreen> {
                       const SizedBox(width: 16),
                       Expanded(
                         child: ImpactCardWidget(
-                          title: 'CO2 Reduced',
+                          title: 'gamification.co2_reduced'.tr(),
                           amount: '${co2Saved.toStringAsFixed(1)} kg',
                           comparisonText:
                               ImpactCalculator.getRelatableComparison(co2Saved),
@@ -174,7 +201,7 @@ class _ImpactDashboardScreenState extends State<ImpactDashboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Achievements',
+                        'gamification.achievements'.tr(),
                         style: AppTextStyles.heading.copyWith(fontSize: 18),
                       ),
                       const SizedBox(height: 16),
@@ -183,7 +210,7 @@ class _ImpactDashboardScreenState extends State<ImpactDashboardScreen> {
                       else if (gamification.achievements.isEmpty)
                         Center(
                           child: Text(
-                            'No achievements yet.',
+                            'gamification.no_achievements'.tr(),
                             style: AppTextStyles.bodyMedium.copyWith(
                               color: Colors.grey.shade500,
                             ),
@@ -236,8 +263,8 @@ class _ImpactDashboardScreenState extends State<ImpactDashboardScreen> {
                               children: [
                                 Text(
                                   _showAllAchievements
-                                      ? 'Show less'
-                                      : 'Show all achievements',
+                                      ? 'gamification.show_less'.tr()
+                                      : 'gamification.show_all_achievements'.tr(),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -292,8 +319,8 @@ class _ImpactDashboardScreenState extends State<ImpactDashboardScreen> {
                           children: [
                             Text(
                               gamification.currentStreakWeeks > 0
-                                  ? 'Keep it up!'
-                                  : 'Rescue food more often!',
+                                  ? 'gamification.keep_it_up'.tr()
+                                  : 'gamification.rescue_more_often'.tr(),
                               style: AppTextStyles.title.copyWith(
                                 fontSize: 16,
                                 color: gamification.currentStreakWeeks > 0
@@ -304,8 +331,8 @@ class _ImpactDashboardScreenState extends State<ImpactDashboardScreen> {
                             const SizedBox(height: 4),
                             Text(
                               gamification.currentStreakWeeks > 0
-                                  ? 'You are on a great streak of saving food and money.'
-                                  : 'You haven\'t rescued food recently. Start saving today!',
+                                  ? 'gamification.great_streak_msg'.tr()
+                                  : 'gamification.no_recent_rescue_msg'.tr(),
                               style: AppTextStyles.bodyMedium.copyWith(
                                 color: gamification.currentStreakWeeks > 0
                                     ? Colors.orange.shade800
@@ -321,8 +348,9 @@ class _ImpactDashboardScreenState extends State<ImpactDashboardScreen> {
                 const SizedBox(height: 100),
               ],
             ),
-          );
-        },
+          ),
+        );
+      },
       ),
     );
   }

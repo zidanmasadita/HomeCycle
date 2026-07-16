@@ -23,20 +23,20 @@ class _MainWrapperState extends State<MainWrapper> {
     _currentIndex = widget.initialIndex;
   }
 
-  final List<Widget> _screens = [
-    const DashboardScreen(),
-    const InventoryScreen(),
-    const SizedBox(),
-    const ImpactDashboardScreen(),
-    const ProfileScreen(),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final screens = [
+      DashboardScreen(),
+      InventoryScreen(),
+      const SizedBox(),
+      ImpactDashboardScreen(),
+      ProfileScreen(),
+    ];
+
     return Scaffold(
       backgroundColor: Colors.white,
       extendBody: true,
-      body: IndexedStack(index: _currentIndex, children: _screens),
+      body: IndexedStack(index: _currentIndex, children: screens),
       bottomNavigationBar: CustomBottomNavbar(
         currentIndex: _currentIndex,
         onTap: (index) {

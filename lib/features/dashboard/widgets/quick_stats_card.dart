@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:homesikil/core/constants/app_colors.dart';
-import 'package:homesikil/core/constants/app_assets.dart';
 import 'package:homesikil/core/constants/app_dimens.dart';
 import 'package:homesikil/core/theme/app_text_styles.dart';
 import 'package:homesikil/features/inventory/provider/inventory_provider.dart';
 import 'package:homesikil/features/dashboard/provider/dashboard_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class QuickStatsCard extends StatelessWidget {
   const QuickStatsCard({super.key});
@@ -53,17 +53,17 @@ class QuickStatsCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _buildStatItem(
-                        title: 'Inventory',
+                        title: 'dashboard.inventory_stat'.tr(),
                         value: '$inventoryCount',
-                        subtitle: 'items',
+                        subtitle: 'dashboard.items'.tr(),
                       ),
                     ),
                     _buildVerticalDivider(),
                     Expanded(
                       child: _buildStatItem(
-                        title: 'Expiring Soon',
+                        title: 'dashboard.expiring_soon'.tr(),
                         value: '$expiringSoonCount',
-                        subtitle: 'items',
+                        subtitle: 'dashboard.items'.tr(),
                       ),
                     ),
                   ],
@@ -82,14 +82,14 @@ class QuickStatsCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _buildStatItem(
-                        title: 'Saved Money',
+                        title: 'dashboard.saved_money'.tr(),
                         value: NumberFormat.currency(locale: 'id_ID', symbol: 'Rp', decimalDigits: 0).format(moneySaved),
                       ),
                     ),
                     _buildVerticalDivider(),
                     Expanded(
                       child: _buildStatItem(
-                        title: 'CO² Saved',
+                        title: 'dashboard.co2_saved'.tr(),
                         value: '${co2Saved.toStringAsFixed(1)} kg',
                         showInfo: true,
                       ),

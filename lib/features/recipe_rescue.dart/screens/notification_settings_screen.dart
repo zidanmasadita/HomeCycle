@@ -5,6 +5,7 @@ import 'package:homesikil/core/constants/app_dimens.dart';
 import 'package:homesikil/features/profile/provider/profile_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({super.key});
@@ -17,7 +18,6 @@ class NotificationSettingsScreen extends StatefulWidget {
 class _NotificationSettingsScreenState
     extends State<NotificationSettingsScreen> {
   bool pushNotifications = true;
-  bool emailNotifications = false;
 
   @override
   void initState() {
@@ -29,7 +29,6 @@ class _NotificationSettingsScreenState
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       pushNotifications = prefs.getBool('push_notifications') ?? true;
-      emailNotifications = prefs.getBool('email_notifications') ?? false;
     });
   }
 
@@ -37,12 +36,6 @@ class _NotificationSettingsScreenState
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('push_notifications', value);
     setState(() => pushNotifications = value);
-  }
-
-  Future<void> _updateEmailNotifications(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('email_notifications', value);
-    setState(() => emailNotifications = value);
   }
 
   Widget _buildSwitchItem(
@@ -104,7 +97,7 @@ class _NotificationSettingsScreenState
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Notifications Setting',
+          'profile.notification_settings'.tr(),
           style: AppTextStyles.heading.copyWith(
             fontSize: 22,
             color: Colors.black87,
@@ -116,9 +109,8 @@ class _NotificationSettingsScreenState
         padding: const EdgeInsets.all(AppDimens.paddingLarge),
         child: Column(
           children: [
-            _buildSwitchItem('Push Notifications', pushNotifications, _updatePushNotifications),
-            _buildSwitchItem('Email Notifications', emailNotifications, _updateEmailNotifications),
-            _buildSwitchItem('Expiry Alerts', expiryAlerts, (val) {
+            _buildSwitchItem('profile.push_notifications'.tr(), pushNotifications, _updatePushNotifications),
+            _buildSwitchItem('profile.expiry_alerts'.tr(), expiryAlerts, (val) {
               context.read<ProfileProvider>().updateNotifyDaysBeforeExpiry(val ? 2 : 0);
             }),
           ],

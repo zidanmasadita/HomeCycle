@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:homesikil/core/constants/app_colors.dart';
 import 'package:homesikil/routes/app_routes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -14,23 +15,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentIndex = 0;
 
-  final List<Map<String, dynamic>> _onboardingData = [
+  List<Map<String, dynamic>> get _onboardingData => [
     {
-      'title1': 'Scan Your Food',
-      'title2': 'Easily',
-      'subtitle': 'Identify fruits and vegetables\ninstantly with AI.',
+      'title1': 'onboarding.scan_title1'.tr(),
+      'title2': 'onboarding.scan_title2'.tr(),
+      'subtitle': 'onboarding.scan_subtitle'.tr(),
       'image': 'assets/images/mascots/Mascot1.png',
     },
     {
-      'title1': 'Reduce',
-      'title2': 'Food Waste',
-      'subtitle': 'Get reminders before\nyour food expires.',
+      'title1': 'onboarding.reduce_title1'.tr(),
+      'title2': 'onboarding.reduce_title2'.tr(),
+      'subtitle': 'onboarding.reduce_subtitle'.tr(),
       'image': 'assets/images/mascots/Mascot2.png',
     },
     {
-      'title1': 'Save Food,',
-      'title2': 'Save Money',
-      'subtitle': 'Track your savings and\nbuild better habits.',
+      'title1': 'onboarding.save_title1'.tr(),
+      'title2': 'onboarding.save_title2'.tr(),
+      'subtitle': 'onboarding.save_subtitle'.tr(),
       'image': 'assets/images/mascots/Mascot3.png',
     },
   ];
@@ -165,8 +166,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                   child: Text(
                     _currentIndex == _onboardingData.length - 1
-                        ? 'Get Started'
-                        : 'Next',
+                        ? 'onboarding.get_started'.tr()
+                        : 'onboarding.next'.tr(),
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -181,9 +182,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             // Skip Button
             TextButton(
               onPressed: _completeOnboarding,
-              child: const Text(
-                'Skip',
-                style: TextStyle(
+              child: Text(
+                'onboarding.skip'.tr(),
+                style: const TextStyle(
                   fontSize: 16,
                   color: Colors.grey,
                   fontWeight: FontWeight.w600,

@@ -6,10 +6,12 @@ import 'package:homesikil/routes/app_routes.dart';
 import 'package:homesikil/core/utils/app_snackbar.dart';
 import 'package:homesikil/features/scan/provider/scan_provider.dart';
 import 'package:homesikil/features/category/provider/category_provider.dart';
+import 'package:homesikil/features/category/models/category_model.dart';
 import 'package:homesikil/features/household/provider/household_provider.dart';
 import 'package:homesikil/features/inventory/models/food_item_model.dart';
 import 'package:homesikil/features/auth/provider/auth_provider.dart';
 import 'package:uuid/uuid.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ScanResultScreen extends StatefulWidget {
   const ScanResultScreen({super.key});
@@ -20,6 +22,7 @@ class ScanResultScreen extends StatefulWidget {
 
 class _ScanResultScreenState extends State<ScanResultScreen> {
   double _quantity = 1.0;
+  bool _storeInFridge = true;
 
   @override
   Widget build(BuildContext context) {
@@ -29,14 +32,14 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
     if (result == null) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Scan Result'),
+          title: Text('scan.scan_result'.tr()),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () => Navigator.pop(context),
           ),
         ),
         body: Center(
-          child: Text(scanProvider.errorMessage ?? "No result found"),
+          child: Text(scanProvider.errorMessage ?? 'scan.no_result'.tr()),
         ),
       );
     }
@@ -47,12 +50,25 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
         ? '${rawName[0].toUpperCase()}${rawName.substring(1)}'
         : rawName;
 
-    final expirationDays = 7;
+    final categories = context.read<CategoryProvider>().categories;
+    final category = categories.firstWhere(
+      (c) => c.id == result.categoryId,
+      orElse: () => CategoryModel(
+        id: '',
+        name: 'scan.unknown'.tr(),
+        type: 'scan.unknown'.tr().toLowerCase(),
+        defaultShelfLifeDays: 7,
+      ),
+    );
+
+    final expirationDays = _storeInFridge
+        ? (category.fridgeShelfLifeDays ?? category.defaultShelfLifeDays)
+        : category.defaultShelfLifeDays;
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Scan Result', style: AppTextStyles.heading),
+        title: Text('scan.scan_result'.tr(), style: AppTextStyles.heading),
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
@@ -110,26 +126,26 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                       children: [
                         _buildDetailRow(
                           Icons.restaurant,
-                          'Food Name',
+                          'scan.food_name'.tr(),
                           capitalizedName,
                         ),
                         const SizedBox(height: 16),
                         _buildDetailRow(
                           Icons.eco,
-                          'Freshness',
-                          'Fresh ($confidencePercent%)',
+                          'scan.freshness'.tr(),
+                          'scan.fresh_confidence'.tr(args: [confidencePercent]),
                           color: Colors.green,
                         ),
                         const SizedBox(height: 16),
                         _buildDetailRow(
                           Icons.calendar_today,
-                          'Estimated Expiry',
-                          '$expirationDays Days',
+                          'scan.estimated_expiry'.tr(),
+                          'scan.days'.tr(args: [expirationDays.toString()]),
                         ),
                         const SizedBox(height: 16),
                         _buildDetailRow(
                           Icons.shopping_basket,
-                          'Quantity',
+                          'scan.quantity'.tr(),
                           '',
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -147,7 +163,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                               ),
                               const SizedBox(width: 12),
                               Text(
-                                '${_quantity.toInt()} Pcs',
+                                'scan.pcs'.tr(args: [_quantity.toInt().toString()]),
                                 style: AppTextStyles.title.copyWith(
                                   fontSize: 16,
                                   color: Colors.black87,
@@ -167,7 +183,76 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        _buildDetailRow(Icons.category, 'Category', 'Detected'),
+                        _buildDetailRow(
+                          Icons.category, 
+                          'scan.category'.tr(), 
+                          category.type.isNotEmpty && category.type != 'scan.unknown'.tr().toLowerCase()
+                              ? '${category.type[0].toUpperCase()}${category.type.substring(1)}'
+                              : 'scan.unknown'.tr()
+                        ),
+                        
+                        const SizedBox(height: 24),
+                        const Divider(),
+                        const SizedBox(height: 16),
+                        
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.kitchen, 
+                                  color: _storeInFridge ? AppColors.primary : Colors.grey,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'scan.store_in_fridge'.tr(),
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Switch(
+                              value: _storeInFridge,
+                              activeColor: AppColors.primary,
+                              onChanged: (val) {
+                                setState(() {
+                                  _storeInFridge = val;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                        if (category.storageTip != null && category.storageTip!.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.blue.withValues(alpha: 0.1)),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(Icons.lightbulb_outline, color: Colors.blue, size: 20),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    category.storageTip!,
+                                    style: const TextStyle(
+                                      color: Colors.blue,
+                                      fontSize: 13,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ]
                       ],
                     ),
                   ),
@@ -225,7 +310,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                                 confidenceScore: result.confidenceScore,
                                 quantity: _quantity,
                                 unit: 'pcs',
-                                storageLocation: 'fridge',
+                                storageLocation: _storeInFridge ? 'fridge' : 'room_temp',
                                 scannedAt: DateTime.now(),
                                 estimatedExpiredDate: DateTime.now().add(
                                   Duration(days: expirationDays),
@@ -250,12 +335,12 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                                   arguments: {'index': 1},
                                 );
                                 AppSnackbar.showSuccess(
-                                  'Item saved to inventory!',
+                                  'scan.save_success'.tr(),
                                 );
                               } else if (context.mounted) {
                                 AppSnackbar.showError(
                                   scanProvider.errorMessage ??
-                                      'Failed to save item',
+                                      'scan.save_failed'.tr(),
                                 );
                               }
                             },
@@ -268,9 +353,9 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                       ),
                       child: scanProvider.isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                              'Save to Inventory',
-                              style: TextStyle(
+                          : Text(
+                              'scan.save_to_inventory'.tr(),
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -296,9 +381,9 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
-                        'Scan Again',
-                        style: TextStyle(
+                      child: Text(
+                        'scan.scan_again'.tr(),
+                        style: const TextStyle(
                           color: AppColors.primary,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

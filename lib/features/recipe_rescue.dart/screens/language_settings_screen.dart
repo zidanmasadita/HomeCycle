@@ -4,6 +4,7 @@ import 'package:homesikil/core/theme/app_text_styles.dart';
 import 'package:homesikil/core/constants/app_dimens.dart';
 import 'package:homesikil/features/profile/provider/profile_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class LanguageSettingsScreen extends StatefulWidget {
   const LanguageSettingsScreen({super.key});
@@ -26,6 +27,9 @@ class _LanguageSettingsScreenState extends State<LanguageSettingsScreen> {
     return GestureDetector(
       onTap: () async {
         await context.read<ProfileProvider>().updateLanguage(languageCode);
+        if (context.mounted) {
+          await context.setLocale(Locale(languageCode));
+        }
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -79,7 +83,7 @@ class _LanguageSettingsScreenState extends State<LanguageSettingsScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Language',
+          'profile.language'.tr(),
           style: AppTextStyles.heading.copyWith(
             fontSize: 22,
             color: Colors.black87,
@@ -93,7 +97,7 @@ class _LanguageSettingsScreenState extends State<LanguageSettingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Select Language',
+              'profile.select_language'.tr(),
               style: AppTextStyles.heading.copyWith(
                 fontSize: 18,
                 color: Colors.black87,

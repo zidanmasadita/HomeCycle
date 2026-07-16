@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:homesikil/features/category/models/category_model.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import 'package:homesikil/core/constants/app_colors.dart';
 import 'package:homesikil/core/theme/app_text_styles.dart';
 import 'package:homesikil/core/constants/app_dimens.dart';
@@ -17,6 +15,7 @@ import 'package:homesikil/features/gamification/widgets/achievement_unlocked_dia
 import 'package:homesikil/features/inventory/widgets/food_image.dart';
 import 'package:homesikil/features/consumption/repository/consumption_repository.dart';
 import 'package:homesikil/core/utils/app_snackbar.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ItemDetailScreen extends StatefulWidget {
   final FoodItemModel item;
@@ -28,43 +27,55 @@ class ItemDetailScreen extends StatefulWidget {
 }
 
 class _ItemDetailScreenState extends State<ItemDetailScreen> {
+  bool _isLoading = false;
+
   Future<void> _handleAction(String action) async {
+    if (_isLoading) return;
+    setState(() => _isLoading = true);
+
     try {
       final inventory = context.read<InventoryProvider>();
       final consumption = context.read<ConsumptionProvider>();
       final dashboard = context.read<DashboardProvider>();
       final gamification = context.read<GamificationProvider>();
 
-      final category = context.read<CategoryProvider>().categories.firstWhere(
-        (c) => c.id == widget.item.categoryId,
+      final currentItem = inventory.inventory.firstWhere(
+        (i) => i.id == widget.item.id,
+        orElse: () => widget.item,
       );
 
-      if (widget.item.quantity <= 1.0 && mounted) {
+      final category = context.read<CategoryProvider>().categories.firstWhere(
+        (c) => c.id == currentItem.categoryId,
+      );
+
+      if (currentItem.quantity <= 1.0 && mounted) {
         Navigator.pop(context);
       }
 
-      final actionText = action == 'consumed' ? 'consumed' : 'wasted';
+      final actionText = action == 'consumed' ? 'inventory.consumed'.tr().toLowerCase() : 'inventory.wasted'.tr().toLowerCase();
       AppSnackbar.showSuccess(
-        'Successfully $actionText 1 unit of ${widget.item.customName}',
+        action == 'consumed' 
+          ? 'inventory.success_consumed'.tr(args: [currentItem.customName ?? category.name])
+          : 'inventory.success_wasted'.tr(args: [currentItem.customName ?? category.name]),
       );
 
       bool success = false;
       if (action == 'consumed') {
         success = await inventory.consumeOrWastePartial(
-          widget.item,
+          currentItem,
           'consumed',
           1.0,
         );
       } else {
         success = await inventory.consumeOrWastePartial(
-          widget.item,
+          currentItem,
           'wasted',
           1.0,
         );
       }
 
       if (success) {
-        final consumedItem = widget.item.copyWith(quantity: 1.0);
+        final consumedItem = currentItem.copyWith(quantity: 1.0);
         await consumption.recordConsumption(
           item: consumedItem,
           category: category,
@@ -76,7 +87,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
         if (action == 'consumed') {
           final consumptionRepo = ConsumptionRepository();
           final adminId =
-              context.read<HouseholdProvider>().adminId ?? widget.item.userId;
+              context.read<HouseholdProvider>().adminId ?? currentItem.userId;
           final streak = await consumptionRepo.getCurrentStreakWeeks(adminId);
 
           await gamification.checkAndUnlockAchievements(
@@ -94,7 +105,11 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           }
         }
       }
-    } finally {}
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -108,10 +123,25 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
       (c) => c.id == item.categoryId,
     );
 
-    final title = item.customName?.isNotEmpty == true
+    String rawTitle = item.customName?.isNotEmpty == true
         ? item.customName!
         : category.name;
-    final formatter = DateFormat('dd MMM yyyy');
+    final title = rawTitle.isNotEmpty 
+        ? '${rawTitle[0].toUpperCase()}${rawTitle.substring(1)}'
+        : rawTitle;
+    
+    final categoryName = category.name.isNotEmpty
+        ? '${category.name[0].toUpperCase()}${category.name.substring(1)}'
+        : category.name;
+    
+    String formatStorageLocation(String? loc) {
+      if (loc == 'room_temp') return 'inventory.room_temp'.tr();
+      if (loc == 'fridge') return 'inventory.fridge'.tr();
+      if (loc == 'freezer') return 'inventory.freezer'.tr();
+      if (loc == null || loc.isEmpty) return 'inventory.unknown'.tr();
+      return '${loc[0].toUpperCase()}${loc.substring(1)}';
+    }
+    final formatter = DateFormat('dd MMM yyyy', context.locale.languageCode);
 
     Color badgeColor;
     Color textColor;
@@ -120,15 +150,15 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     if (item.isExpired) {
       badgeColor = AppColors.red.withValues(alpha: 0.1);
       textColor = AppColors.red;
-      statusText = 'Expired';
+      statusText = 'inventory.status_expired'.tr();
     } else if (item.isExpiringSoon) {
       badgeColor = Colors.orange.withValues(alpha: 0.1);
       textColor = Colors.orange;
-      statusText = 'Expiring Soon';
+      statusText = 'inventory.status_expiring_soon'.tr();
     } else {
       badgeColor = AppColors.success.withValues(alpha: 0.1);
       textColor = AppColors.success;
-      statusText = 'Fresh';
+      statusText = 'inventory.status_fresh'.tr();
     }
 
     return Scaffold(
@@ -210,28 +240,28 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       // Detail Rows
                       _buildDetailRow(
                         Icons.category_outlined,
-                        'Category',
-                        category.name,
+                        'inventory.category'.tr(),
+                        categoryName,
                       ),
                       _buildDetailRow(
                         Icons.calendar_today_outlined,
-                        'Purchase Date',
+                        'inventory.purchase_date'.tr(),
                         formatter.format(item.createdAt),
                       ),
                       _buildDetailRow(
                         Icons.event_busy_outlined,
-                        'Expiry Date',
+                        'inventory.expiry_date'.tr(),
                         formatter.format(item.estimatedExpiredDate),
                       ),
                       _buildDetailRow(
                         Icons.shopping_bag_outlined,
-                        'Quantity',
+                        'inventory.quantity'.tr(),
                         '${item.quantity.toStringAsFixed(0)} ${item.unit}',
                       ),
                       _buildDetailRow(
                         Icons.kitchen_outlined,
-                        'Storage',
-                        item.storageLocation ?? 'Unknown',
+                        'inventory.storage'.tr(),
+                        formatStorageLocation(item.storageLocation),
                       ),
                     ],
                   ),
@@ -250,21 +280,30 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                         width: double.infinity,
                         height: 55,
                         child: ElevatedButton(
-                          onPressed: () => _handleAction('consumed'),
+                          onPressed: _isLoading ? null : () => _handleAction('consumed'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
                           ),
-                          child: const Text(
-                            'Consumed',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          child: _isLoading 
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                            : Text(
+                                'inventory.consumed'.tr(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -272,7 +311,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                         width: double.infinity,
                         height: 55,
                         child: OutlinedButton(
-                          onPressed: () => _handleAction('wasted'),
+                          onPressed: _isLoading ? null : () => _handleAction('wasted'),
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(
                               color: Colors.redAccent,
@@ -282,14 +321,23 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                               borderRadius: BorderRadius.circular(16),
                             ),
                           ),
-                          child: const Text(
-                            'Wasted',
-                            style: TextStyle(
-                              color: Colors.redAccent,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          child: _isLoading
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.redAccent,
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                            : Text(
+                                'inventory.wasted'.tr(),
+                                style: const TextStyle(
+                                  color: Colors.redAccent,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                         ),
                       ),
                     ],

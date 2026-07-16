@@ -1,10 +1,138 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:homesikil/features/scan/models/scan_result_model.dart';
 import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
+
+class IsolateData {
+  final int width;
+  final int height;
+  final String formatGroup;
+  final List<Uint8List> planeBytes;
+  final List<int> planeBytesPerRow;
+  final List<int?> planeBytesPerPixel;
+
+  IsolateData({
+    required this.width,
+    required this.height,
+    required this.formatGroup,
+    required this.planeBytes,
+    required this.planeBytesPerRow,
+    required this.planeBytesPerPixel,
+  });
+}
+
+class IsolateResult {
+  final Float32List inputList;
+  final Uint8List imageBytes;
+
+  IsolateResult(this.inputList, this.imageBytes);
+}
+
+// Top-level function for Isolate
+IsolateResult _processImageInIsolate(IsolateData data) {
+  img.Image? convertedImage;
+
+  if (data.formatGroup == 'yuv420') {
+    convertedImage = _convertYUV420ToImage(data);
+  } else if (data.formatGroup == 'bgra8888') {
+    convertedImage = _convertBGRA8888ToImage(data);
+  } else {
+    throw Exception('Format gambar tidak didukung: ${data.formatGroup}');
+  }
+
+  if (convertedImage == null) throw Exception('Gagal decode frame kamera');
+
+  // We no longer encode to JPG during live preview!
+  // This saves massive amounts of CPU and completely fixes the stuttering.
+  // The actual high quality JPG will be captured using the native camera API
+  // when the user taps the capture button.
+  final imageBytes = Uint8List(0);
+
+  final size = convertedImage.width < convertedImage.height
+      ? convertedImage.width
+      : convertedImage.height;
+  final x0 = (convertedImage.width - size) ~/ 2;
+  final y0 = (convertedImage.height - size) ~/ 2;
+
+  final croppedImage = img.copyCrop(
+    convertedImage,
+    x: x0,
+    y: y0,
+    width: size,
+    height: size,
+  );
+
+  final resizedImage = img.copyResize(
+    croppedImage,
+    width: 224,
+    height: 224,
+    interpolation: img.Interpolation.linear,
+  );
+
+  var input = Float32List(1 * 224 * 224 * 3);
+  var pixelIndex = 0;
+  for (var y = 0; y < resizedImage.height; y++) {
+    for (var x = 0; x < resizedImage.width; x++) {
+      final pixel = resizedImage.getPixel(x, y);
+      input[pixelIndex++] = (pixel.r / 127.5) - 1.0;
+      input[pixelIndex++] = (pixel.g / 127.5) - 1.0;
+      input[pixelIndex++] = (pixel.b / 127.5) - 1.0;
+    }
+  }
+
+  return IsolateResult(input, imageBytes);
+}
+
+img.Image _convertBGRA8888ToImage(IsolateData data) {
+  return img.Image.fromBytes(
+    width: data.width,
+    height: data.height,
+    bytes: data.planeBytes[0].buffer,
+    order: img.ChannelOrder.bgra,
+  );
+}
+
+img.Image _convertYUV420ToImage(IsolateData data) {
+  final int width = data.width;
+  final int height = data.height;
+  final int uvRowStride = data.planeBytesPerRow[1];
+  final int uvPixelStride = data.planeBytesPerPixel[1] ?? 1;
+
+  final img.Image imgResult = img.Image(width: width, height: height);
+  final plane0Bytes = data.planeBytes[0];
+  final plane1Bytes = data.planeBytes[1];
+  final plane2Bytes = data.planeBytes[2];
+  final plane0BytesPerRow = data.planeBytesPerRow[0];
+
+  for (int y = 0; y < height; y++) {
+    int pY = y * plane0BytesPerRow;
+    int pUV = (y ~/ 2) * uvRowStride;
+
+    for (int x = 0; x < width; x++) {
+      final int uvOffset = pUV + (x ~/ 2) * uvPixelStride;
+      final yp = plane0Bytes[pY];
+      final up = plane1Bytes[uvOffset];
+      final vp = plane2Bytes[uvOffset];
+
+      int r = (yp + vp * 1436 / 1024 - 179).round();
+      int g = (yp - up * 46549 / 131072 + 44 - vp * 93604 / 131072 + 91).round();
+      int b = (yp + up * 1814 / 1024 - 227).round();
+
+      r = r.clamp(0, 255);
+      g = g.clamp(0, 255);
+      b = b.clamp(0, 255);
+
+      imgResult.setPixelRgb(x, y, r, g, b);
+      pY++;
+    }
+  }
+  return imgResult;
+}
+
 
 class TFLiteService {
   Interpreter? _interpreter;
@@ -61,28 +189,30 @@ class TFLiteService {
       interpolation: img.Interpolation.linear,
     );
 
-    var input = Float32List(1 * 224 * 224 * 3);
+    var inputObj = List.generate(
+      1,
+      (_) => List.generate(
+        224,
+        (_) => List.generate(224, (_) => List.filled(3, 0.0)),
+      ),
+    );
+    
     var pixelIndex = 0;
-
-    for (var y = 0; y < resizedImage.height; y++) {
-      for (var x = 0; x < resizedImage.width; x++) {
+    for (var y = 0; y < 224; y++) {
+      for (var x = 0; x < 224; x++) {
         final pixel = resizedImage.getPixel(x, y);
-
-        input[pixelIndex++] = (pixel.r / 127.5) - 1.0;
-        input[pixelIndex++] = (pixel.g / 127.5) - 1.0;
-        input[pixelIndex++] = (pixel.b / 127.5) - 1.0;
+        inputObj[0][y][x][0] = (pixel.r / 127.5) - 1.0;
+        inputObj[0][y][x][1] = (pixel.g / 127.5) - 1.0;
+        inputObj[0][y][x][2] = (pixel.b / 127.5) - 1.0;
       }
     }
 
-    final inputShape = [1, 224, 224, 3];
-    final inputObj = input.reshape(inputShape);
-
-    final outputShape = [1, 36];
-    var outputObj = List.filled(36, 0.0).reshape(outputShape);
-
+    final outputShape = _interpreter!.getOutputTensor(0).shape;
+    final numClasses = outputShape[1]; // e.g. 32
+    var outputObj = List.generate(1, (_) => List.filled(numClasses, 0.0));
     _interpreter!.run(inputObj, outputObj);
 
-    final outputList = (outputObj as List)[0] as List<double>;
+    final outputList = outputObj[0];
 
     int maxIndex = 0;
     double maxConfidence = outputList[0];
@@ -94,7 +224,7 @@ class TFLiteService {
       }
     }
 
-    final detectedLabel = maxConfidence >= 0.70 ? _labels[maxIndex] : 'Unknown';
+    final detectedLabel = maxIndex < _labels.length ? _labels[maxIndex] : 'Unknown';
 
     return ScanResultModel(
       detectedLabel: detectedLabel,
@@ -107,126 +237,65 @@ class TFLiteService {
   Future<ScanResultModel> runInferenceFromCameraImage(CameraImage image) async {
     if (_interpreter == null) throw Exception('Model belum diinisialisasi');
 
-    img.Image? convertedImage;
-
     try {
-      if (image.format.group == ImageFormatGroup.yuv420) {
-        convertedImage = _convertYUV420ToImage(image);
-      } else if (image.format.group == ImageFormatGroup.bgra8888) {
-        convertedImage = _convertBGRA8888ToImage(image);
-      } else {
-        throw Exception('Format gambar tidak didukung: ${image.format.group}');
+      final isolateData = IsolateData(
+        width: image.width,
+        height: image.height,
+        formatGroup: image.format.group.name,
+        // MUST use Uint8List.fromList to copy the native memory view,
+        // otherwise compute() throws an exception and fails!
+        planeBytes: image.planes.map((p) => Uint8List.fromList(p.bytes)).toList(),
+        planeBytesPerRow: image.planes.map((p) => p.bytesPerRow).toList(),
+        planeBytesPerPixel: image.planes.map((p) => p.bytesPerPixel).toList(),
+      );
+
+      // Offload heavy image processing to an isolate
+      final result = await compute(_processImageInIsolate, isolateData);
+
+      var inputObj = List.generate(
+        1,
+        (_) => List.generate(
+          224,
+          (_) => List.generate(224, (_) => List.filled(3, 0.0)),
+        ),
+      );
+      
+      int p = 0;
+      for (int y = 0; y < 224; y++) {
+        for (int x = 0; x < 224; x++) {
+          inputObj[0][y][x][0] = result.inputList[p++];
+          inputObj[0][y][x][1] = result.inputList[p++];
+          inputObj[0][y][x][2] = result.inputList[p++];
+        }
       }
+
+      final outputShape = _interpreter!.getOutputTensor(0).shape;
+      final numClasses = outputShape[1];
+      var outputObj = List.generate(1, (_) => List.filled(numClasses, 0.0));
+      _interpreter!.run(inputObj, outputObj);
+      
+      final outputList = outputObj[0];
+      int maxIndex = 0;
+      double maxConfidence = outputList[0];
+
+      for (int i = 1; i < outputList.length; i++) {
+        if (outputList[i] > maxConfidence) {
+          maxConfidence = outputList[i];
+          maxIndex = i;
+        }
+      }
+
+      final detectedLabel = maxIndex < _labels.length ? _labels[maxIndex] : 'Unknown';
+
+      return ScanResultModel(
+        detectedLabel: detectedLabel,
+        confidenceScore: maxConfidence,
+        condition: 'fresh',
+        imageBytes: result.imageBytes,
+      );
     } catch (e) {
       throw Exception('Gagal konversi frame kamera: $e');
     }
-
-    if (convertedImage == null) throw Exception('Gagal decode frame kamera');
-
-    final imageBytes = Uint8List.fromList(
-      img.encodeJpg(convertedImage, quality: 70),
-    );
-
-    final size = convertedImage.width < convertedImage.height
-        ? convertedImage.width
-        : convertedImage.height;
-    final x0 = (convertedImage.width - size) ~/ 2;
-    final y0 = (convertedImage.height - size) ~/ 2;
-
-    final croppedImage = img.copyCrop(
-      convertedImage,
-      x: x0,
-      y: y0,
-      width: size,
-      height: size,
-    );
-
-    final resizedImage = img.copyResize(
-      croppedImage,
-      width: 224,
-      height: 224,
-      interpolation: img.Interpolation.linear,
-    );
-
-    var input = Float32List(1 * 224 * 224 * 3);
-    var pixelIndex = 0;
-    for (var y = 0; y < resizedImage.height; y++) {
-      for (var x = 0; x < resizedImage.width; x++) {
-        final pixel = resizedImage.getPixel(x, y);
-        input[pixelIndex++] = (pixel.r / 127.5) - 1.0;
-        input[pixelIndex++] = (pixel.g / 127.5) - 1.0;
-        input[pixelIndex++] = (pixel.b / 127.5) - 1.0;
-      }
-    }
-
-    final inputShape = [1, 224, 224, 3];
-    final inputObj = input.reshape(inputShape);
-    final outputShape = [1, 36];
-    var outputObj = List.filled(36, 0.0).reshape(outputShape);
-
-    _interpreter!.run(inputObj, outputObj);
-    final outputList = (outputObj as List)[0] as List<double>;
-    int maxIndex = 0;
-    double maxConfidence = outputList[0];
-
-    for (int i = 1; i < outputList.length; i++) {
-      if (outputList[i] > maxConfidence) {
-        maxConfidence = outputList[i];
-        maxIndex = i;
-      }
-    }
-
-    final detectedLabel = maxConfidence >= 0.70 ? _labels[maxIndex] : 'Unknown';
-
-    return ScanResultModel(
-      detectedLabel: detectedLabel,
-      confidenceScore: maxConfidence,
-      condition: 'fresh',
-      imageBytes: imageBytes,
-    );
-  }
-
-  img.Image _convertBGRA8888ToImage(CameraImage image) {
-    return img.Image.fromBytes(
-      width: image.width,
-      height: image.height,
-      bytes: image.planes[0].bytes.buffer,
-      order: img.ChannelOrder.bgra,
-    );
-  }
-
-  img.Image _convertYUV420ToImage(CameraImage image) {
-    final int width = image.width;
-    final int height = image.height;
-    final int uvRowStride = image.planes[1].bytesPerRow;
-    final int uvPixelStride = image.planes[1].bytesPerPixel ?? 1;
-
-    final img.Image imgResult = img.Image(width: width, height: height);
-
-    for (int y = 0; y < height; y++) {
-      int pY = y * image.planes[0].bytesPerRow;
-      int pUV = (y ~/ 2) * uvRowStride;
-
-      for (int x = 0; x < width; x++) {
-        final int uvOffset = pUV + (x ~/ 2) * uvPixelStride;
-        final yp = image.planes[0].bytes[pY];
-        final up = image.planes[1].bytes[uvOffset];
-        final vp = image.planes[2].bytes[uvOffset];
-
-        int r = (yp + vp * 1436 / 1024 - 179).round();
-        int g = (yp - up * 46549 / 131072 + 44 - vp * 93604 / 131072 + 91)
-            .round();
-        int b = (yp + up * 1814 / 1024 - 227).round();
-
-        r = r.clamp(0, 255);
-        g = g.clamp(0, 255);
-        b = b.clamp(0, 255);
-
-        imgResult.setPixelRgb(x, y, r, g, b);
-        pY++;
-      }
-    }
-    return imgResult;
   }
 
   void close() {

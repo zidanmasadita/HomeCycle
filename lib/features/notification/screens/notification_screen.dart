@@ -38,16 +38,34 @@ class NotificationScreen extends StatelessWidget {
           final earlierNotifications = notificationProvider.earlierNotifications;
 
           if (todayNotifications.isEmpty && earlierNotifications.isEmpty) {
-            return const Center(
-              child: Text(
-                'No notifications right now.',
-                style: TextStyle(color: Colors.grey),
+            return RefreshIndicator(
+              onRefresh: () async {
+                await context.read<NotificationProvider>().loadNotifications();
+              },
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.5,
+                    child: const Center(
+                      child: Text(
+                        'No notifications right now.',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             );
           }
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(AppDimens.paddingLarge),
+          return RefreshIndicator(
+            onRefresh: () async {
+              await context.read<NotificationProvider>().loadNotifications();
+            },
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(AppDimens.paddingLarge),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -86,8 +104,9 @@ class NotificationScreen extends StatelessWidget {
                 ],
               ],
             ),
-          );
-        },
+          ),
+        );
+      },
       ),
     );
   }

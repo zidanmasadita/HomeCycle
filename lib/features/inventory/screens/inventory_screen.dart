@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:homesikil/core/constants/app_colors.dart';
 import 'package:homesikil/core/theme/app_text_styles.dart';
@@ -7,6 +8,7 @@ import 'package:homesikil/features/inventory/widgets/food_item_card.dart';
 import 'package:homesikil/features/inventory/provider/inventory_provider.dart';
 import 'package:homesikil/features/category/provider/category_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class InventoryScreen extends StatefulWidget {
   const InventoryScreen({super.key});
@@ -18,11 +20,28 @@ class InventoryScreen extends StatefulWidget {
 class _InventoryScreenState extends State<InventoryScreen> {
   final List<String> categories = ['All', 'Fresh', 'Expire Soon', 'Expired'];
   String selectedCategory = 'All';
-
-
+  String _searchQuery = '';
+  Timer? _debounce;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      setState(() {
+        _searchQuery = query.toLowerCase();
+      });
+    });
+  }
+  @override
   Widget build(BuildContext context) {
+    context.locale; // Force rebuild on locale change
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
@@ -38,9 +57,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Text(
-                    'My Inventory',
-                    style: AppTextStyles.heading.copyWith(
+                    Text(
+                      'inventory.my_inventory'.tr(),
+                      style: AppTextStyles.heading.copyWith(
                       color: AppColors.primary,
                       fontSize: 28,
                     ),
@@ -59,10 +78,23 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   color: Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(30),
                 ),
-                child: TextField(
+                  child: TextField(
+                  controller: _searchController,
+                  onChanged: _onSearchChanged,
                   decoration: InputDecoration(
                     prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                    hintText: 'Search food...',
+                    suffixIcon: _searchQuery.isNotEmpty 
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, color: Colors.grey),
+                          iconSize: 20,
+                          onPressed: () {
+                            _searchController.clear();
+                            _onSearchChanged('');
+                            FocusScope.of(context).unfocus();
+                          },
+                        ) 
+                      : null,
+                    hintText: 'inventory.search_food'.tr(),
                     hintStyle: TextStyle(color: Colors.grey.shade400),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(vertical: 14),
@@ -85,8 +117,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 itemBuilder: (context, index) {
                   final category = categories[index];
                   final isSelected = category == selectedCategory;
+                  String displayCategory = category;
+                  if (category == 'All') displayCategory = 'inventory.filter_all'.tr();
+                  else if (category == 'Fresh') displayCategory = 'inventory.filter_fresh'.tr();
+                  else if (category == 'Expire Soon') displayCategory = 'inventory.filter_expire_soon'.tr();
+                  else if (category == 'Expired') displayCategory = 'inventory.filter_expired'.tr();
+
                   return CategoryFilterChip(
-                    label: category,
+                    label: displayCategory,
                     isSelected: isSelected,
                     onTap: () {
                       setState(() {
@@ -114,17 +152,50 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     displayList = inventory.expiredItems;
                   }
 
+                  if (_searchQuery.isNotEmpty) {
+                    displayList = displayList.where((item) {
+                      final customNameMatch = item.customName?.toLowerCase().contains(_searchQuery) ?? false;
+                      
+                      // Find category name safely
+                      String catName = '';
+                      try {
+                        final cat = categories.categories.firstWhere((c) => c.id == item.categoryId);
+                        catName = cat.name.toLowerCase();
+                      } catch (_) {}
+                      
+                      return customNameMatch || catName.contains(_searchQuery);
+                    }).toList();
+                  }
+
                   if (inventory.isLoading) {
                     return const Center(child: CircularProgressIndicator());
                   }
 
                   if (displayList.isEmpty) {
-                    return const Center(
-                      child: Text('Your inventory is empty in this category!'),
+                    return RefreshIndicator(
+                      onRefresh: () async {
+                        await context.read<InventoryProvider>().loadInventory();
+                      },
+                      child: ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.5,
+                            child: Center(
+                              child: Text('inventory.empty_category'.tr()),
+                            ),
+                          ),
+                        ],
+                      ),
                     );
                   }
 
-                    return ListView.builder(
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      await context.read<InventoryProvider>().loadInventory();
+                    },
+                    child: ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.only(
                         left: AppDimens.paddingLarge,
                         right: AppDimens.paddingLarge,
@@ -136,7 +207,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         final category = categories.findById(item.categoryId);
                         return FoodItemCard(item: item, category: category);
                       },
-                    );
+                    ),
+                  );
                   },
                 ),
               ),

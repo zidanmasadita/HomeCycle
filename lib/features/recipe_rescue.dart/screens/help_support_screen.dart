@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:homesikil/core/constants/app_colors.dart';
 import 'package:homesikil/core/theme/app_text_styles.dart';
 import 'package:homesikil/core/constants/app_dimens.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class HelpSupportScreen extends StatelessWidget {
   const HelpSupportScreen({super.key});
@@ -34,12 +35,18 @@ class HelpSupportScreen extends StatelessWidget {
             ),
             iconColor: AppColors.primary,
             collapsedIconColor: Colors.grey.shade400,
-            childrenPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+            childrenPadding: const EdgeInsets.only(
+              left: 16,
+              right: 16,
+              bottom: 16,
+            ),
             expandedAlignment: Alignment.topLeft,
             children: [
               Text(
                 answer,
-                style: AppTextStyles.bodyMedium.copyWith(color: Colors.grey.shade600),
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: Colors.grey.shade600,
+                ),
               ),
             ],
           ),
@@ -60,7 +67,7 @@ class HelpSupportScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Help & Support',
+          'profile.help_support'.tr(),
           style: AppTextStyles.heading.copyWith(
             fontSize: 22,
             color: Colors.black87,
@@ -74,7 +81,7 @@ class HelpSupportScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Contact Us',
+              'profile.contact_us'.tr(),
               style: AppTextStyles.heading.copyWith(fontSize: 18),
             ),
             const SizedBox(height: 16),
@@ -83,7 +90,9 @@ class HelpSupportScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 children: [
@@ -92,8 +101,16 @@ class HelpSupportScreen extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Email Support', style: AppTextStyles.title),
-                      Text('support@homecycle.com', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primary)),
+                      Text(
+                        'profile.email_support'.tr(),
+                        style: AppTextStyles.title,
+                      ),
+                      Text(
+                        'masadita20@gmail.com',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.primary,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -101,13 +118,25 @@ class HelpSupportScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'FAQ',
+              'profile.faq'.tr(),
               style: AppTextStyles.heading.copyWith(fontSize: 18),
             ),
             const SizedBox(height: 16),
-            _buildFaqItem(context, 'How do I add a new item?', 'Tap the + button in the bottom navigation bar to scan a receipt, barcode, or enter details manually.'),
-            _buildFaqItem(context, 'Can I share my inventory?', 'Yes! Go to Household Members to invite your family or roommates to view and manage your inventory.'),
-            _buildFaqItem(context, 'How does recipe rescue work?', 'Recipe rescue suggests recipes based on ingredients you have that are expiring soon so nothing goes to waste.'),
+            _buildFaqItem(
+              context,
+              'profile.faq_1_q'.tr(),
+              'profile.faq_1_a'.tr(),
+            ),
+            _buildFaqItem(
+              context,
+              'profile.faq_2_q'.tr(),
+              'profile.faq_2_a'.tr(),
+            ),
+            _buildFaqItem(
+              context,
+              'profile.faq_3_q'.tr(),
+              'profile.faq_3_a'.tr(),
+            ),
           ],
         ),
       ),

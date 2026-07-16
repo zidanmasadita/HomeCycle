@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:homesikil/routes/app_routes.dart';
 import 'package:homesikil/features/auth/screens/login_screen.dart';
 import 'package:homesikil/features/auth/screens/register_screen.dart';
+import 'package:homesikil/features/auth/screens/forgot_password_screen.dart';
 import 'package:homesikil/routes/main_wrapper.dart';
 import 'package:homesikil/features/gamification/screens/impact_dashboard_screen.dart';
 import 'package:homesikil/features/inventory/screens/add_edit_item_screen.dart';
@@ -31,6 +32,8 @@ class RouteGenerator {
         return MaterialPageRoute(builder: (_) => const LoginScreen());
       case AppRoutes.register:
         return MaterialPageRoute(builder: (_) => const RegisterScreen());
+      case AppRoutes.forgotPassword:
+        return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
       case AppRoutes.onboarding:
         return MaterialPageRoute(builder: (_) => const OnboardingScreen());
       case AppRoutes.dashboard:

@@ -5,9 +5,10 @@ import 'package:homesikil/core/constants/app_dimens.dart';
 import 'package:homesikil/core/constants/app_assets.dart';
 import 'package:homesikil/core/utils/app_snackbar.dart';
 import 'package:homesikil/features/auth/provider/auth_provider.dart';
-import 'package:homesikil/features/household/provider/household_provider.dart';
 import 'package:homesikil/features/household/models/household_invitation_model.dart';
+import 'package:homesikil/features/household/provider/household_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class HouseholdMembersScreen extends StatelessWidget {
   const HouseholdMembersScreen({super.key});
@@ -46,7 +47,7 @@ class HouseholdMembersScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  name + (isMe ? ' (You)' : ''),
+                  name + (isMe ? 'profile.you'.tr() : ''),
                   style: AppTextStyles.title.copyWith(fontSize: 16),
                 ),
                 Text(
@@ -87,7 +88,7 @@ class HouseholdMembersScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Household Invitation',
+            'profile.invitation'.tr(),
             style: AppTextStyles.title.copyWith(
               fontSize: 16,
               color: Colors.orange.shade800,
@@ -95,7 +96,7 @@ class HouseholdMembersScreen extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'You have been invited to join a household.',
+            'profile.invitation_desc'.tr(),
             style: AppTextStyles.bodyMedium.copyWith(
               color: Colors.orange.shade800,
             ),
@@ -110,7 +111,7 @@ class HouseholdMembersScreen extends StatelessWidget {
                     final success = await provider.acceptInvite(invite.id);
                     if (!context.mounted) return;
                     if (success) {
-                      AppSnackbar.showSuccess('Joined household successfully!');
+                      AppSnackbar.showSuccess('profile.joined_success'.tr());
                     } else {
                       AppSnackbar.showError(
                         provider.errorMessage ?? 'Error',
@@ -123,9 +124,9 @@ class HouseholdMembersScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Accept',
-                    style: TextStyle(color: Colors.white),
+                  child: Text(
+                    'profile.accept'.tr(),
+                    style: const TextStyle(color: Colors.white),
                   ),
                 ),
               ),
@@ -144,7 +145,7 @@ class HouseholdMembersScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text('Decline'),
+                  child: Text('profile.decline'.tr()),
                 ),
               ),
             ],
@@ -160,18 +161,18 @@ class HouseholdMembersScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Invite Member'),
+        title: Text('profile.invite_member'.tr()),
         content: TextField(
           controller: usernameController,
-          decoration: const InputDecoration(
-            labelText: 'Username',
-            hintText: 'Enter username to invite',
+          decoration: InputDecoration(
+            labelText: 'profile.username'.tr(),
+            hintText: 'profile.enter_username'.tr(),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text('profile.cancel'.tr()),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -182,16 +183,16 @@ class HouseholdMembersScreen extends StatelessWidget {
                 if (ctx.mounted) {
                   Navigator.pop(ctx);
                   if (success) {
-                    AppSnackbar.showSuccess('Invitation sent successfully');
+                    AppSnackbar.showSuccess('profile.invite_sent'.tr());
                   } else {
                     AppSnackbar.showError(
-                      provider.errorMessage ?? 'Failed to send invite',
+                      provider.errorMessage ?? 'profile.invite_failed'.tr(),
                     );
                   }
                 }
               }
             },
-            child: const Text('Send Invite'),
+            child: Text('profile.send_invite'.tr()),
           ),
         ],
       ),
@@ -202,14 +203,14 @@ class HouseholdMembersScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Leave Household?'),
-        content: const Text(
-          'Are you sure you want to leave this household? You will lose access to its inventory.',
+        title: Text('profile.leave_household_q'.tr()),
+        content: Text(
+          'profile.leave_household_desc'.tr(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text('profile.cancel'.tr()),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -218,16 +219,16 @@ class HouseholdMembersScreen extends StatelessWidget {
               final success = await provider.leaveHousehold();
               if (context.mounted) {
                 if (success) {
-                  AppSnackbar.showSuccess('Left household successfully');
+                  AppSnackbar.showSuccess('profile.left_success'.tr());
                 } else {
                   AppSnackbar.showError(
-                    provider.errorMessage ?? 'Failed to leave',
+                    provider.errorMessage ?? 'profile.left_failed'.tr(),
                   );
                 }
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.red),
-            child: const Text('Leave', style: TextStyle(color: Colors.white)),
+            child: Text('profile.leave'.tr(), style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -257,7 +258,7 @@ class HouseholdMembersScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Household Members',
+          'profile.household_members'.tr(),
           style: AppTextStyles.heading.copyWith(
             fontSize: 22,
             color: Colors.black87,
@@ -275,7 +276,7 @@ class HouseholdMembersScreen extends StatelessWidget {
                   // Pending Invitations Section
                   if (invites.isNotEmpty) ...[
                     Text(
-                      'Pending Invitations',
+                      'profile.pending_invitations'.tr(),
                       style: AppTextStyles.title.copyWith(fontSize: 18),
                     ),
                     const SizedBox(height: 12),
@@ -289,12 +290,12 @@ class HouseholdMembersScreen extends StatelessWidget {
                   if (isAdmin && currentUser != null)
                     _buildMemberCard(
                       currentUser.username ?? currentUser.email,
-                      'Admin (You)',
+                      'profile.admin_you'.tr(),
                       isMe: true,
                     ),
 
                   if (!isAdmin)
-                    _buildMemberCard(householdProvider.adminName, 'Admin'),
+                    _buildMemberCard(householdProvider.adminName, 'profile.admin'.tr()),
 
                   ...members.map((member) {
                     final isMe = member.memberId == currentUser?.id;
@@ -324,9 +325,9 @@ class HouseholdMembersScreen extends StatelessWidget {
                           Icons.person_add_alt_1,
                           color: Colors.white,
                         ),
-                        label: const Text(
-                          'Invite Member',
-                          style: TextStyle(
+                        label: Text(
+                          'profile.invite_member'.tr(),
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -351,9 +352,9 @@ class HouseholdMembersScreen extends StatelessWidget {
                           Icons.exit_to_app,
                           color: AppColors.red,
                         ),
-                        label: const Text(
-                          'Leave Household',
-                          style: TextStyle(
+                        label: Text(
+                          'profile.leave_household'.tr(),
+                          style: const TextStyle(
                             color: AppColors.red,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -381,7 +382,7 @@ class HouseholdMembersScreen extends StatelessWidget {
                   ),
                   Center(
                     child: Text(
-                      'Manage food together with your family.',
+                      'profile.manage_food'.tr(),
                       textAlign: TextAlign.center,
                       style: AppTextStyles.title.copyWith(
                         color: AppColors.primary,
@@ -392,7 +393,7 @@ class HouseholdMembersScreen extends StatelessWidget {
                   const SizedBox(height: 4),
                   Center(
                     child: Text(
-                      'Track food and save more together',
+                      'profile.track_food'.tr(),
                       textAlign: TextAlign.center,
                       style: AppTextStyles.bodyMedium.copyWith(
                         color: Colors.grey.shade500,

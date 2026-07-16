@@ -1,9 +1,11 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:provider/provider.dart';
 import 'package:homesikil/features/scan/provider/scan_provider.dart';
 import 'package:homesikil/routes/app_routes.dart';
 import 'package:homesikil/core/constants/app_colors.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ScanScreen extends StatefulWidget {
   const ScanScreen({super.key});
@@ -88,6 +90,13 @@ class _ScanScreenState extends State<ScanScreen> {
         );
       }
 
+      // Take high quality picture using native camera API
+      final XFile picture = await _controller!.takePicture();
+      final Uint8List imageBytes = await picture.readAsBytes();
+
+      // Update the liveResult with these bytes before capturing
+      scanProvider.setLiveResultImage(imageBytes);
+
       // Capture the current live result as the final result
       scanProvider.captureLiveResult();
 
@@ -149,6 +158,20 @@ class _ScanScreenState extends State<ScanScreen> {
             right: 0,
             child: Consumer<ScanProvider>(
               builder: (context, provider, child) {
+                if (provider.errorMessage != null) {
+                  return Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      color: Colors.red.withValues(alpha: 0.8),
+                      child: Text(
+                        provider.errorMessage!,
+                        style: const TextStyle(color: Colors.white),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                }
+
                 final result = provider.liveResult;
                 if (result == null) return const SizedBox.shrink();
 
@@ -179,7 +202,7 @@ class _ScanScreenState extends State<ScanScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Confidence: $confidence%',
+                          'scan.confidence'.tr(args: [confidence]),
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.8),
                             fontSize: 16,

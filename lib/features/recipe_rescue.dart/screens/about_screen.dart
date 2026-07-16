@@ -3,6 +3,7 @@ import 'package:homesikil/core/constants/app_colors.dart';
 import 'package:homesikil/core/theme/app_text_styles.dart';
 import 'package:homesikil/core/constants/app_dimens.dart';
 import 'package:homesikil/core/constants/app_assets.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -19,7 +20,7 @@ class AboutScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'About HomeCycle',
+          'profile.about'.tr(),
           style: AppTextStyles.heading.copyWith(
             fontSize: 22,
             color: Colors.black87,
@@ -52,17 +53,17 @@ class AboutScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Version 1.0.0',
+              'profile.version'.tr(),
               style: AppTextStyles.bodyMedium.copyWith(color: Colors.grey.shade600),
             ),
             const SizedBox(height: 40),
             Text(
-              'Our Mission',
+              'profile.our_mission'.tr(),
               style: AppTextStyles.heading.copyWith(fontSize: 18),
             ),
             const SizedBox(height: 12),
             Text(
-              'To empower households to reduce food waste, save money, and live more sustainably through smart inventory management and creative recipe suggestions.',
+              'profile.mission_desc'.tr(),
               textAlign: TextAlign.center,
               style: AppTextStyles.bodyLarge.copyWith(height: 1.5, color: Colors.black87),
             ),
@@ -72,12 +73,12 @@ class AboutScreen extends StatelessWidget {
               children: [
                 TextButton(
                   onPressed: () {},
-                  child: const Text('Terms of Service', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                  child: Text('profile.terms'.tr(), style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
                 ),
                 Text(' | ', style: TextStyle(color: Colors.grey.shade400)),
                 TextButton(
                   onPressed: () {},
-                  child: const Text('Privacy Policy', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                  child: Text('profile.privacy'.tr(), style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),

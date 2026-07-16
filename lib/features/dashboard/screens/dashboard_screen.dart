@@ -11,6 +11,7 @@ import 'package:homesikil/features/category/provider/category_provider.dart';
 import 'package:homesikil/routes/app_routes.dart';
 import 'package:provider/provider.dart';
 import 'package:homesikil/features/notification/provider/notification_provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 
 class DashboardScreen extends StatelessWidget {
@@ -18,6 +19,7 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    context.locale; // Force rebuild on locale change
     final auth = context.watch<AuthProvider>();
     final inventoryProvider = context.watch<InventoryProvider>();
     final categoryProvider = context.watch<CategoryProvider>();
@@ -28,8 +30,15 @@ class DashboardScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            await context.read<InventoryProvider>().loadInventory();
+            await context.read<CategoryProvider>().loadCategories(forceRefresh: true);
+            await context.read<NotificationProvider>().loadNotifications();
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Top App Bar
@@ -120,7 +129,7 @@ class DashboardScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Hello,',
+                              'dashboard.hello'.tr(),
                               style: AppTextStyles.displayLarge.copyWith(
                                 fontSize: 32,
                                 color: Colors.black87,
@@ -137,7 +146,7 @@ class DashboardScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              "Let's save more food today",
+                              'dashboard.subtitle'.tr(),
                               style: AppTextStyles.bodyLarge.copyWith(
                                 color: Colors.grey.shade800,
                               ),
@@ -197,7 +206,7 @@ class DashboardScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Expiring Soon',
+                      'dashboard.expiring_soon'.tr(),
                       style: AppTextStyles.title.copyWith(color: Colors.black),
                     ),
                     GestureDetector(
@@ -209,7 +218,7 @@ class DashboardScreen extends StatelessWidget {
                         );
                       },
                       child: Text(
-                        'See All',
+                        'dashboard.see_all'.tr(),
                         style: AppTextStyles.bodyLarge.copyWith(
                           fontWeight: FontWeight.bold,
                           color: AppColors.primary,
@@ -224,11 +233,11 @@ class DashboardScreen extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: expiringItems.isEmpty
-                    ? const Padding(
-                        padding: EdgeInsets.all(20.0),
+                    ? Padding(
+                        padding: const EdgeInsets.all(20.0),
                         child: Text(
-                          "Nothing expiring soon! Great job!",
-                          style: TextStyle(color: Colors.grey),
+                          'dashboard.nothing_expiring'.tr(),
+                          style: const TextStyle(color: Colors.grey),
                         ),
                       )
                     : Column(
@@ -242,14 +251,14 @@ class DashboardScreen extends StatelessWidget {
                             title:
                                 item.customName ??
                                 category?.name ??
-                                'Unknown Item',
-                            daysLeft: '${item.daysUntilExpiration} Days Left',
+                                'dashboard.unknown_item'.tr(),
+                            daysLeft: 'dashboard.days_left'.tr(args: [item.daysUntilExpiration.toString()]),
                             badgeColor: item.daysUntilExpiration == 0
                                 ? Colors.red
                                 : AppColors.yellow,
                             badgeText: item.daysUntilExpiration == 0
-                                ? 'Today'
-                                : 'Soon',
+                                ? 'dashboard.today'.tr()
+                                : 'dashboard.soon'.tr(),
                           );
                         }).toList(),
                       ),
@@ -259,6 +268,7 @@ class DashboardScreen extends StatelessWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }
