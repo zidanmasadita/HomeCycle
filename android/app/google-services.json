@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "698541429692",
+    "project_id": "homec-57d27",
+    "storage_bucket": "homec-57d27.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:698541429692:android:febbd631d9a018264bd1b9",
+        "android_client_info": {
+          "package_name": "com.example.homesikil"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDYenMETpv87s74e79dRHx2Gby7eqHqT8M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

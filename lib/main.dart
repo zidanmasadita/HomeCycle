@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:google_fonts/google_fonts.dart';
-
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'data/remote/supabase_service.dart';
 import 'data/remote/tflite_service.dart';
@@ -36,8 +36,16 @@ import 'features/household/provider/household_provider.dart';
 
 import 'package:homesikil/core/utils/app_snackbar.dart';
 
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  debugPrint("Handling a background message: ${message.messageId}");
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await EasyLocalization.ensureInitialized();
   await SupabaseService.initialize();
 
