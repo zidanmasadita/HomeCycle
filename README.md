@@ -64,9 +64,9 @@
 | **State Management** | Provider (ChangeNotifier pattern) |
 | **Backend & Database** | Supabase (PostgreSQL) |
 | **Authentication** | Supabase Auth |
-| **Storage** | Supabase Storage (foto hasil scan) |
+| **Storage** | Supabase Storage (foto hasil scan & avatar profil) |
 | **AI/ML** | TensorFlow Lite (TFLite) |
-| **Notifications** | flutter_local_notifications + Supabase Edge Functions |
+| **Notifications** | Firebase Cloud Messaging (FCM) + flutter_local_notifications |
 | **Localization** | easy_localization |
 | **Fonts** | Google Fonts |
 | **Date/Time** | intl + timeago |
@@ -183,7 +183,13 @@ erDiagram
         uuid id PK
         text email
         text encrypted_password
+        jsonb raw_user_meta_data
         timestamptz created_at
+    }
+
+    users {
+        uuid id PK, FK
+        text fcm_token
     }
 
     categories {
@@ -300,8 +306,9 @@ erDiagram
         timestamptz expires_at
     }
 
-    auth_users ||--o{ food_items : "memiliki"
-    auth_users ||--o{ scan_history : "melakukan"
+    auth_users ||--o{ users : "1:1 extension"
+    auth_users ||--o{ food_items : "owns"
+    auth_users ||--o{ scan_history : "performs"
     auth_users ||--o{ consumption_log : "mencatat"
     auth_users ||--o{ notifications : "menerima"
     auth_users ||--|| user_preferences : "memiliki"
