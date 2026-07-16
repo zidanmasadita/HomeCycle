@@ -7,12 +7,14 @@ import 'package:homesikil/features/recipe_rescue.dart/widgets/profile_menu_card.
 import 'package:homesikil/features/auth/provider/auth_provider.dart';
 import 'package:homesikil/features/household/provider/household_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    context.locale; // Force rebuild on locale change
     final authProvider = context.watch<AuthProvider>();
     final user = authProvider.currentUser;
 
@@ -23,7 +25,7 @@ class ProfileScreen extends StatelessWidget {
         elevation: 0,
         automaticallyImplyLeading: false,
         title: Text(
-          'Profile',
+          'profile.title'.tr(),
           style: AppTextStyles.heading.copyWith(
             fontSize: 22,
             color: Colors.black87,
@@ -31,14 +33,22 @@ class ProfileScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppDimens.paddingLarge),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await context.read<HouseholdProvider>().loadMembers();
+          // Add any other user profile reloads here if necessary
+          await Future.delayed(const Duration(milliseconds: 500));
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(AppDimens.paddingLarge),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ProfileHeaderCard(
               username: user?.username ?? 'Mate',
-              email: user?.email ?? 'No email provided',
+              email: user?.email ?? 'profile.no_email'.tr(),
+              avatarUrl: user?.avatarUrl,
               onEditTap: () {
                 Navigator.pushNamed(context, AppRoutes.editProfile);
               },
@@ -46,7 +56,7 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 32),
 
             Text(
-              'General',
+              'profile.general'.tr(),
               style: AppTextStyles.heading.copyWith(
                 fontSize: 18,
                 color: Colors.black87,
@@ -56,15 +66,15 @@ class ProfileScreen extends StatelessWidget {
 
             ProfileMenuCard(
               icon: Icons.language,
-              title: 'Language',
-              trailingText: 'English (US)',
+              title: 'profile.language'.tr(),
+              trailingText: context.locale.languageCode == 'id' ? 'Indonesian' : 'English (US)',
               onTap: () {
                 Navigator.pushNamed(context, AppRoutes.languageSettings);
               },
             ),
             ProfileMenuCard(
               icon: Icons.notifications_active_outlined,
-              title: 'Notifications Setting',
+              title: 'profile.notification_settings'.tr(),
               onTap: () {
                 Navigator.pushNamed(context, AppRoutes.notificationSettings);
               },
@@ -74,8 +84,8 @@ class ProfileScreen extends StatelessWidget {
                 final count = household.members.length;
                 return ProfileMenuCard(
                   icon: Icons.group_outlined,
-                  title: 'Household Members',
-                  trailingText: count > 0 ? '$count members' : 'None',
+                  title: 'profile.household_members'.tr(),
+                  trailingText: count > 0 ? 'profile.members_count'.tr(args: [count.toString()]) : 'profile.none'.tr(),
                   onTap: () {
                     Navigator.pushNamed(context, AppRoutes.householdMembers);
                   },
@@ -85,7 +95,7 @@ class ProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
             Text(
-              'Other',
+              'profile.other'.tr(),
               style: AppTextStyles.heading.copyWith(
                 fontSize: 18,
                 color: Colors.black87,
@@ -95,14 +105,14 @@ class ProfileScreen extends StatelessWidget {
 
             ProfileMenuCard(
               icon: Icons.help_outline,
-              title: 'Help & Support',
+              title: 'profile.help_support'.tr(),
               onTap: () {
                 Navigator.pushNamed(context, AppRoutes.helpSupport);
               },
             ),
             ProfileMenuCard(
               icon: Icons.info_outline,
-              title: 'About HomeCycle',
+              title: 'profile.about'.tr(),
               onTap: () {
                 Navigator.pushNamed(context, AppRoutes.about);
               },
@@ -111,7 +121,7 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 32),
             ProfileMenuCard(
               icon: Icons.logout,
-              title: 'Logout',
+              title: 'profile.logout'.tr(),
               isDestructive: true,
               onTap: () async {
                 final authProvider = context.read<AuthProvider>();
@@ -129,6 +139,7 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 100),
           ],
         ),
+      ),
       ),
     );
   }

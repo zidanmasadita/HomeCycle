@@ -6,12 +6,14 @@ import 'package:homesikil/core/theme/app_text_styles.dart';
 class ProfileHeaderCard extends StatelessWidget {
   final String username;
   final String email;
+  final String? avatarUrl;
   final VoidCallback onEditTap;
 
   const ProfileHeaderCard({
     super.key,
     required this.username,
     required this.email,
+    this.avatarUrl,
     required this.onEditTap,
   });
 
@@ -43,12 +45,21 @@ class ProfileHeaderCard extends StatelessWidget {
               color: AppColors.primary.withValues(alpha: 0.1),
             ),
             child: ClipOval(
-              child: Image.asset(
-                AppAssets.mascot1,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.person, color: AppColors.primary, size: 40),
-              ),
+              child: avatarUrl != null && avatarUrl!.isNotEmpty
+                  ? Image.network(
+                      avatarUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Image.asset(
+                        AppAssets.mascot1,
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  : Image.asset(
+                      AppAssets.mascot1,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.person, color: AppColors.primary, size: 40),
+                    ),
             ),
           ),
           const SizedBox(width: 20),

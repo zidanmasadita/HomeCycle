@@ -5,6 +5,7 @@ class UserModel {
   final String email;
   final String? username;
   final String? phone;
+  final String? avatarUrl;
   final DateTime createdAt;
 
   UserModel({
@@ -12,6 +13,7 @@ class UserModel {
     required this.email,
     this.username,
     this.phone,
+    this.avatarUrl,
     required this.createdAt,
   });
 
@@ -22,6 +24,7 @@ class UserModel {
       email: user.email ?? '',
       username: (metadata['username'] ?? metadata['name'] ?? metadata['full_name']) as String?,
       phone: metadata['phone'] as String?,
+      avatarUrl: metadata['avatar_url'] as String?,
       createdAt: DateTime.parse(user.createdAt),
     );
   }
