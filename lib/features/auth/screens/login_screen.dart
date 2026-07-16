@@ -10,6 +10,7 @@ import 'package:homesikil/core/utils/validators.dart';
 import 'package:homesikil/features/auth/provider/auth_provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:homesikil/routes/app_routes.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -128,7 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 20.0),
                         child: Text(
-                          "Welcome\nback, Mate!",
+                          'auth.welcome_back'.tr(),
                           style: AppTextStyles.displayLarge,
                         ),
                       ),
@@ -150,7 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Padding(
                 padding: const EdgeInsets.only(left: 30.0, bottom: 20.0, top: 20.0),
                 child: Text(
-                  "Welcome\nback, Mate!",
+                  'auth.welcome_back'.tr(),
                   style: AppTextStyles.displayLarge,
                 ),
               ),
@@ -171,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 15.0),
                       child: Text(
-                        'Login',
+                        'auth.login_title'.tr(),
                         textAlign: TextAlign.center,
                         style: AppTextStyles.title.copyWith(
                           color: Colors.white,
@@ -224,9 +225,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ],
                                 ),
                                 const SizedBox(height: 20),
-                                const Text(
-                                  'Or use your email account',
-                                  style: TextStyle(
+                                Text(
+                                  'auth.or_use_email'.tr(),
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     color: Colors.black87,
                                   ),
@@ -236,7 +237,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 // Email Field
                                 _buildField(
                                   controller: _emailController,
-                                  hint: 'Email',
+                                  hint: 'auth.email'.tr(),
                                   icon: Icons.email_outlined,
                                   keyboardType: TextInputType.emailAddress,
                                   autofillHints: const [AutofillHints.email],
@@ -246,7 +247,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 // Password Field
                                 _buildField(
                                   controller: _passwordController,
-                                  hint: 'Password',
+                                  hint: 'auth.password'.tr(),
                                   icon: Icons.lock_outline,
                                   obscure: _obscurePassword,
                                   autofillHints: const [AutofillHints.password],
@@ -291,9 +292,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                                 Colors.grey.shade300,
                                           ),
                                         ),
-                                        const Text(
-                                          'Remember Me',
-                                          style: TextStyle(
+                                        Text(
+                                          'auth.remember_me'.tr(),
+                                          style: const TextStyle(
                                             fontSize: 14,
                                             color: Colors.black87,
                                           ),
@@ -301,10 +302,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ],
                                     ),
                                     GestureDetector(
-                                      onTap: () {},
-                                      child: const Text(
-                                        'Forgot Password',
-                                        style: TextStyle(
+                                      onTap: () {
+                                        Navigator.pushNamed(context, AppRoutes.forgotPassword);
+                                      },
+                                      child: Text(
+                                        'auth.forgot_password'.tr(),
+                                        style: const TextStyle(
                                           fontSize: 14,
                                           color: AppColors.primary,
                                           fontWeight: FontWeight.bold,
@@ -345,9 +348,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                                       strokeWidth: 2,
                                                     ),
                                               )
-                                            : const Text(
-                                                'Login',
-                                                style: TextStyle(
+                                            : Text(
+                                                'auth.login_title'.tr(),
+                                                style: const TextStyle(
                                                   fontSize: 22,
                                                   fontWeight: FontWeight.bold,
                                                   color: Colors.white,
@@ -364,9 +367,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    const Text(
-                                      "Don't have an account? ",
-                                      style: TextStyle(color: Colors.black87),
+                                    Text(
+                                      'auth.dont_have_account'.tr(),
+                                      style: const TextStyle(color: Colors.black87),
                                     ),
                                     GestureDetector(
                                       onTap: () => Navigator.push(
@@ -376,9 +379,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                               const RegisterScreen(),
                                         ),
                                       ),
-                                      child: const Text(
-                                        'Register',
-                                        style: TextStyle(
+                                      child: Text(
+                                        'auth.register_link'.tr(),
+                                        style: const TextStyle(
                                           color: AppColors.primary,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -445,10 +448,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }) {
     return Container(
       margin: EdgeInsets.only(bottom: bottomMargin),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.grey.shade400, width: 1),
-      ),
       child: TextFormField(
         controller: controller,
         obscureText: obscure,
@@ -462,12 +461,34 @@ class _LoginScreenState extends State<LoginScreen> {
           suffixIcon: suffixIcon,
           hintText: hint,
           hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 16),
-          border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 24,
             vertical: 16,
           ),
-          errorStyle: const TextStyle(fontSize: 12),
+          errorMaxLines: 2,
+          errorStyle: const TextStyle(fontSize: 12, height: 1.2),
+          helperText: ' ',
+          helperStyle: const TextStyle(fontSize: 12, height: 1.2),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: Colors.red, width: 1),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: Colors.red, width: 1.5),
+          ),
         ),
       ),
     );

@@ -10,6 +10,7 @@ import 'package:homesikil/core/utils/validators.dart';
 import 'package:homesikil/features/auth/provider/auth_provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:homesikil/routes/app_routes.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -130,7 +131,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 20.0),
-                        child: Text("Let's get \nstarted,\nMate!", style: AppTextStyles.displayLarge),
+                        child: Text('auth.get_started'.tr(), style: AppTextStyles.displayLarge),
                       ),
                     ),
                     Transform.translate(
@@ -150,7 +151,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Padding(
                 padding: const EdgeInsets.only(left: 30.0, bottom: 20.0, top: 20.0),
                 child: Text(
-                  "Let's get \nstarted,\nMate!",
+                  'auth.get_started'.tr(),
                   style: AppTextStyles.displayLarge,
                 ),
               ),
@@ -171,7 +172,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 15.0),
                       child: Text(
-                        'Register',
+                        'auth.register_title'.tr(),
                         textAlign: TextAlign.center,
                         style: AppTextStyles.title.copyWith(
                           color: Colors.white,
@@ -217,16 +218,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   ],
                                 ),
                                 const SizedBox(height: 12),
-                                const Text(
-                                  'Or use your email account',
-                                  style: TextStyle(fontSize: 14, color: Colors.black87),
+                                Text(
+                                  'auth.or_use_email'.tr(),
+                                  style: const TextStyle(fontSize: 14, color: Colors.black87),
                                 ),
                                 const SizedBox(height: 12),
 
                                 // Username
                                 _buildField(
                                   controller: _usernameController,
-                                  hint: 'Username',
+                                  hint: 'auth.username'.tr(),
                                   icon: Icons.person_outline,
                                   autofillHints: const [AutofillHints.username],
                                   validator: validateUsername,
@@ -235,7 +236,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 // Email
                                 _buildField(
                                   controller: _emailController,
-                                  hint: 'Email',
+                                  hint: 'auth.email'.tr(),
                                   icon: Icons.email_outlined,
                                   keyboardType: TextInputType.emailAddress,
                                   autofillHints: const [AutofillHints.email],
@@ -245,7 +246,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 // Password + inline policy hint
                                 _buildField(
                                   controller: _passwordController,
-                                  hint: 'Password',
+                                  hint: 'auth.password'.tr(),
                                   icon: Icons.lock_outline,
                                   obscure: _obscurePassword,
                                   focusNode: _passwordFocusNode,
@@ -268,10 +269,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       : CrossFadeState.showSecond,
                                   firstChild: Padding(
                                     padding: const EdgeInsets.only(left: 14, top: 6, bottom: 4),
-                                    child: Text(
-                                      'Min. 8 chars, at least one letter and one number',
-                                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                                    ),
+                                      child: Text(
+                                        'auth.password_policy'.tr(),
+                                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                      ),
                                   ),
                                   secondChild: const SizedBox(width: double.infinity),
                                 ),
@@ -301,7 +302,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                                 child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                                               )
                                             : Text(
-                                                'Register',
+                                                'auth.register_title'.tr(),
                                                 style: AppTextStyles.bodyMedium.copyWith(
                                                   color: Colors.white,
                                                   fontWeight: FontWeight.bold,
@@ -318,18 +319,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    const Text(
-                                      'Already have an account? ',
-                                      style: TextStyle(color: Colors.black87),
-                                    ),
+                                      Text(
+                                        'auth.already_have_account'.tr(),
+                                        style: const TextStyle(color: Colors.black87),
+                                      ),
                                     GestureDetector(
                                       onTap: () => Navigator.push(
                                         context,
                                         MaterialPageRoute(builder: (_) => const LoginScreen()),
                                       ),
-                                      child: const Text(
-                                        'Login',
-                                        style: TextStyle(
+                                      child: Text(
+                                        'auth.login_link'.tr(),
+                                        style: const TextStyle(
                                           color: AppColors.primary,
                                           fontWeight: FontWeight.bold,
                                           decoration: TextDecoration.underline,
@@ -392,25 +393,48 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }) {
     return Container(
       margin: EdgeInsets.only(bottom: bottomMargin),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.grey.shade400, width: 1),
-      ),
       child: TextFormField(
         controller: controller,
-        focusNode: focusNode,
         obscureText: obscure,
         keyboardType: keyboardType,
         autofillHints: autofillHints,
         validator: validator,
+        focusNode: focusNode,
         decoration: InputDecoration(
-          prefixIcon: icon != null ? Icon(icon, color: Colors.grey.shade500) : null,
+          prefixIcon: icon != null
+              ? Icon(icon, color: Colors.grey.shade500)
+              : null,
           suffixIcon: suffixIcon,
           hintText: hint,
           hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 16),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          errorStyle: const TextStyle(fontSize: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 16,
+          ),
+          errorMaxLines: 2,
+          errorStyle: const TextStyle(fontSize: 12, height: 1.2),
+          helperText: ' ',
+          helperStyle: const TextStyle(fontSize: 12, height: 1.2),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: Colors.red, width: 1),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: Colors.red, width: 1.5),
+          ),
         ),
       ),
     );
