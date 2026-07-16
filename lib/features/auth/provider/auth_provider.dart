@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesikil/errors/failure.dart';
 import 'package:homesikil/features/auth/models/user_model.dart';
 import 'package:homesikil/features/auth/repository/auth_repository.dart';
+import 'package:homesikil/features/notification/services/fcm_service.dart';
 
 enum AuthStatus { initial, loading, success, error }
 
@@ -15,17 +16,37 @@ class AuthProvider extends ChangeNotifier {
     _currentUser = _repository.getCurrentUser();
     if (_currentUser != null) {
       _status = AuthStatus.success;
+      _setupPushNotifications();
     }
 
     _authSubscription = _repository.authStateChanges.listen((user) {
       _currentUser = user;
       if (user != null) {
         _status = AuthStatus.success;
+        _setupPushNotifications();
       } else if (_status != AuthStatus.error) {
         _status = AuthStatus.initial;
       }
       notifyListeners();
     });
+  }
+
+  Future<void> _setupPushNotifications() async {
+    try {
+      final fcmService = FCMService();
+      await fcmService.initialize();
+      
+      final token = await fcmService.getToken();
+      if (token != null) {
+        await _repository.updateFcmToken(token);
+      }
+      
+      fcmService.onTokenRefresh.listen((newToken) {
+        _repository.updateFcmToken(newToken);
+      });
+    } catch (e) {
+      print('Error setting up push notifications: $e');
+    }
   }
 
   AuthStatus _status = AuthStatus.initial;
@@ -141,19 +162,58 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> resetPassword({required String email}) async {
+  Future<bool> resetPassword({required String email}) async {
     _status = AuthStatus.loading;
     _errorMessage = null;
     notifyListeners();
 
     try {
+      final emailExists = await _repository.checkEmailExists(email.trim());
+      if (!emailExists) {
+        _errorMessage = 'Email address not found.';
+        _status = AuthStatus.error;
+        notifyListeners();
+        return false;
+      }
+
       await _repository.resetPassword(email: email.trim());
       _status = AuthStatus.success;
+      notifyListeners();
+      return true;
     } on Failure catch (e) {
       _errorMessage = e.message;
       _status = AuthStatus.error;
+      notifyListeners();
+      return false;
     }
+  }
+
+  Future<bool> uploadProfilePicture(String filePath) async {
+    _status = AuthStatus.loading;
+    _errorMessage = null;
     notifyListeners();
+
+    try {
+      final url = await _repository.uploadProfilePicture(filePath);
+      if (_currentUser != null) {
+        _currentUser = UserModel(
+          id: _currentUser!.id,
+          email: _currentUser!.email,
+          username: _currentUser!.username,
+          phone: _currentUser!.phone,
+          avatarUrl: url,
+          createdAt: _currentUser!.createdAt,
+        );
+      }
+      _status = AuthStatus.success;
+      notifyListeners();
+      return true;
+    } on Failure catch (e) {
+      _errorMessage = e.message;
+      _status = AuthStatus.error;
+      notifyListeners();
+      return false;
+    }
   }
 
   @override

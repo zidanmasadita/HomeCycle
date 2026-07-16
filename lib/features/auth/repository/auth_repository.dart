@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:homesikil/data/remote/supabase_service.dart';
 import 'package:homesikil/errors/failure.dart';
 import 'package:homesikil/features/auth/models/user_model.dart';
@@ -92,7 +93,22 @@ class AuthRepository {
 
   Future<void> resetPassword({required String email}) async {
     try {
-      await _client.auth.resetPasswordForEmail(email);
+      await _client.auth.resetPasswordForEmail(
+        email,
+        redirectTo: 'homesikil://login-callback',
+      );
+    } catch (e) {
+      throw Failure.fromException(e);
+    }
+  }
+
+  Future<bool> checkEmailExists(String email) async {
+    try {
+      final response = await _client.rpc(
+        'check_email_exists',
+        params: {'p_email': email},
+      );
+      return response as bool;
     } catch (e) {
       throw Failure.fromException(e);
     }
@@ -114,5 +130,50 @@ class AuthRepository {
       }
       return null;
     });
+  }
+
+  Future<void> updateFcmToken(String token) async {
+    try {
+      final userId = _client.auth.currentUser?.id;
+      if (userId == null) return;
+      
+      // Save FCM token in the 'users' table or update user metadata
+      // Given the prompt "users table", we'll upsert into a public 'users' table
+      await _client.from('users').upsert({
+        'id': userId,
+        'fcm_token': token,
+      });
+    } catch (e) {
+      // Log error silently
+      print('Failed to update FCM token: $e');
+    }
+  }
+
+  Future<String> uploadProfilePicture(String filePath) async {
+    try {
+      final userId = _client.auth.currentUser?.id;
+      if (userId == null) throw const Failure('User not logged in');
+
+      final fileExt = filePath.split('.').last;
+      final fileName = '$userId.${DateTime.now().millisecondsSinceEpoch}.$fileExt';
+      final path = 'avatars/$fileName';
+
+      // Upload to Supabase Storage
+      await _client.storage.from('avatars').upload(path, File(filePath));
+
+      // Get public URL
+      final publicUrl = _client.storage.from('avatars').getPublicUrl(path);
+
+      // Update user metadata
+      await _client.auth.updateUser(
+        UserAttributes(
+          data: {'avatar_url': publicUrl},
+        ),
+      );
+
+      return publicUrl;
+    } catch (e) {
+      throw Failure.fromException(e);
+    }
   }
 }
