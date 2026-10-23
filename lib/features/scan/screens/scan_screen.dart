@@ -155,14 +155,25 @@ class _ScanScreenState extends State<ScanScreen> {
       );
     }
 
+    // Ukuran pratinjau dalam orientasi tegak: previewSize dilaporkan
+    // dalam orientasi sensor (lanskap), putaran 90/270 menukar sisinya.
+    // Kotak pemandu memakai ukuran ini agar persis sebesar wilayah
+    // yang diklasifikasikan model.
+    final rawPreviewSize = _controller!.value.previewSize;
+    final uprightPreviewSize = rawPreviewSize == null
+        ? null
+        : (_frameRotationDegrees % 180 == 90)
+        ? Size(rawPreviewSize.height, rawPreviewSize.width)
+        : rawPreviewSize;
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         children: [
           SizedBox.expand(child: CameraPreview(_controller!)),
 
-          // Bingkai pemandu: area persegi yang benar-benar diproses model
-          const ScanFrameOverlay(),
+          // Bingkai pemandu: wilayah yang benar-benar diproses model
+          ScanFrameOverlay(uprightPreviewSize: uprightPreviewSize),
 
           // Back button
           Positioned(

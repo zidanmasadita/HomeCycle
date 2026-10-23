@@ -1,24 +1,34 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:homecycle/core/theme/app_text_styles.dart';
+import 'package:homecycle/features/scan/models/scan_crop.dart';
 
 /// Bingkai pemandu pada layar pindai — lapis pencegahan untuk mitigasi
 /// kondisi nyata (pertanyaan penguji no. 3).
 ///
-/// Kotak persegi di tengah layar menunjukkan persis area yang diproses
-/// model: pipeline klasifikasi memotong persegi tengah gambar lalu
-/// mengubah ukurannya menjadi 224x224. Instruksi di bawah bingkai mengajak
-/// pengguna memenuhi bingkai dengan objek, tidak menutupi objek dengan
-/// tangan/benda lain, dan memastikan cahaya cukup — tiga hal yang terbukti
-/// paling memengaruhi ketepatan hasil pindai.
+/// Kotak persegi menunjukkan persis area yang diproses model pada
+/// jalur live: persegi tengah frame sebesar ScanCrop.liveFraction
+/// (lihat scan_crop.dart). Ukurannya dihitung dari ukuran pratinjau
+/// kamera dengan skala cover-fit yang sama seperti yang dipakai
+/// CameraPreview, dan diletakkan di tengah frame — bukan perkiraan
+/// kasar dari ukuran layar. Instruksi di bawah bingkai mengajak
+/// pengguna memenuhi bingkai dengan objek, tidak menutupi objek
+/// dengan tangan/benda lain, dan memastikan cahaya cukup — tiga hal
+/// yang terbukti paling memengaruhi ketepatan hasil pindai.
 class ScanFrameOverlay extends StatelessWidget {
-  const ScanFrameOverlay({super.key});
+  const ScanFrameOverlay({super.key, this.uprightPreviewSize});
+
+  /// Ukuran pratinjau kamera dalam orientasi tegak (lebar x tinggi).
+  /// Null bila belum diketahui; ukuran kotak kembali ke perkiraan lama.
+  final Size? uprightPreviewSize;
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final frameSize = size.width * 0.78;
-    final frameCenterY = size.height * 0.42;
+    final frameSize = _frameSide(size);
+    final frameCenterY = size.height / 2;
 
     return IgnorePointer(
       child: Stack(
@@ -58,6 +68,22 @@ class ScanFrameOverlay extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// Sisi kotak (piksel logis) untuk wilayah crop live: fraksi crop
+  /// dari sisi terpendek frame, diskalakan dengan skala cover-fit
+  /// pratinjau terhadap layar.
+  double _frameSide(Size screen) {
+    final preview = uprightPreviewSize;
+    if (preview == null || preview.width <= 0 || preview.height <= 0) {
+      return screen.width * 0.78;
+    }
+    final scale = math.max(
+      screen.width / preview.width,
+      screen.height / preview.height,
+    );
+    final cropPx = ScanCrop.liveFraction * math.min(preview.width, preview.height);
+    return cropPx * scale;
   }
 }
 
