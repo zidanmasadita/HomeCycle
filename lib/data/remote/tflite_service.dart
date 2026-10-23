@@ -16,6 +16,12 @@ class IsolateData {
   final List<int> planeBytesPerRow;
   final List<int?> planeBytesPerPixel;
 
+  /// Sudut (derajat, kelipatan 90) untuk memutar hasil crop agar tegak.
+  /// Frame stream kamera Android tiba dalam orientasi sensor
+  /// (menyamping); tanpa putaran ini model mengklasifikasikan gambar
+  /// miring 90 derajat, yang terbukti menurunkan ketepatannya.
+  final int rotationDegrees;
+
   IsolateData({
     required this.width,
     required this.height,
@@ -23,6 +29,7 @@ class IsolateData {
     required this.planeBytes,
     required this.planeBytesPerRow,
     required this.planeBytesPerPixel,
+    required this.rotationDegrees,
   });
 }
 
@@ -69,12 +76,19 @@ IsolateResult _processImageInIsolate(IsolateData data) {
   // when the user taps the capture button.
   final imageBytes = Uint8List(0);
 
-  final resizedImage = img.copyResize(
+  var resizedImage = img.copyResize(
     squareImage,
     width: 224,
     height: 224,
     interpolation: img.Interpolation.linear,
   );
+
+  // Putar ke orientasi tegak pada ukuran 224x224 (paling murah, dan
+  // untuk kelipatan 90 derajat tidak ada piksel yang terbuang).
+  final rotation = data.rotationDegrees % 360;
+  if (rotation != 0) {
+    resizedImage = img.copyRotate(resizedImage, angle: rotation);
+  }
 
   var input = Float32List(1 * 224 * 224 * 3);
   var pixelIndex = 0;
@@ -193,8 +207,14 @@ class TFLiteService {
       throw Exception('Model belum diinisialisasi');
     }
 
-    final image = img.decodeImage(imageBytes);
-    if (image == null) throw Exception('Gagal decode gambar');
+    final decoded = img.decodeImage(imageBytes);
+    if (decoded == null) throw Exception('Gagal decode gambar');
+
+    // Terapkan orientasi EXIF: sebagian perangkat menulis JPEG tangkapan
+    // dalam orientasi sensor plus tag EXIF, dan decodeImage tidak
+    // memutarnya otomatis. Tanpa ini foto bisa diklasifikasikan miring.
+    // Bila EXIF normal, bakeOrientation tidak mengubah apa pun.
+    final image = img.bakeOrientation(decoded);
 
     final size = image.width < image.height ? image.width : image.height;
     final x0 = (image.width - size) ~/ 2;
@@ -305,7 +325,10 @@ class TFLiteService {
     }
   }
 
-  Future<ScanResultModel> runInferenceFromCameraImage(CameraImage image) async {
+  Future<ScanResultModel> runInferenceFromCameraImage(
+    CameraImage image, {
+    int rotationDegrees = 0,
+  }) async {
     if (_interpreter == null) throw Exception('Model belum diinisialisasi');
 
     try {
@@ -318,6 +341,7 @@ class TFLiteService {
         planeBytes: image.planes.map((p) => Uint8List.fromList(p.bytes)).toList(),
         planeBytesPerRow: image.planes.map((p) => p.bytesPerRow).toList(),
         planeBytesPerPixel: image.planes.map((p) => p.bytesPerPixel).toList(),
+        rotationDegrees: rotationDegrees,
       );
 
       // Offload heavy image processing to an isolate

@@ -58,12 +58,18 @@ class ScanProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> processCameraFrame(CameraImage image) async {
+  Future<void> processCameraFrame(
+    CameraImage image, {
+    int rotationDegrees = 0,
+  }) async {
     if (_isProcessingFrame || _status != ScanStatus.success) return;
 
     _isProcessingFrame = true;
     try {
-      final result = await _tfLiteService.runInferenceFromCameraImage(image);
+      final result = await _tfLiteService.runInferenceFromCameraImage(
+        image,
+        rotationDegrees: rotationDegrees,
+      );
       final category = _categoryProvider.categories
           .where(
             (c) => c.name.toLowerCase() == result.detectedLabel.toLowerCase(),

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
@@ -21,6 +22,11 @@ class _ScanScreenState extends State<ScanScreen> {
   CameraController? _controller;
   bool _isCameraInitialized = false;
 
+  /// Sudut putar agar frame stream menjadi tegak. Hanya Android:
+  /// frame tiba dalam orientasi sensor; kamera belakang umumnya
+  /// sensorOrientation 90, kamera depan kebalikannya.
+  int _frameRotationDegrees = 0;
+
   @override
   void initState() {
     super.initState();
@@ -39,6 +45,13 @@ class _ScanScreenState extends State<ScanScreen> {
         (c) => c.lensDirection == CameraLensDirection.back,
         orElse: () => cameras.first,
       );
+
+      if (Platform.isAndroid) {
+        _frameRotationDegrees =
+            backCamera.lensDirection == CameraLensDirection.front
+            ? (360 - backCamera.sensorOrientation) % 360
+            : backCamera.sensorOrientation;
+      }
 
       _controller = CameraController(
         backCamera,
@@ -67,7 +80,10 @@ class _ScanScreenState extends State<ScanScreen> {
         // Start live stream
         _controller!.startImageStream((CameraImage image) {
           if (mounted) {
-            context.read<ScanProvider>().processCameraFrame(image);
+            context.read<ScanProvider>().processCameraFrame(
+              image,
+              rotationDegrees: _frameRotationDegrees,
+            );
           }
         });
       }
