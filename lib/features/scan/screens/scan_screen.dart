@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:provider/provider.dart';
+import 'package:homecycle/features/scan/models/scan_quality.dart';
 import 'package:homecycle/features/scan/provider/scan_provider.dart';
 import 'package:homecycle/features/scan/widgets/scan_frame_overlay.dart';
 import 'package:homecycle/routes/app_routes.dart';
@@ -49,8 +50,11 @@ class _ScanScreenState extends State<ScanScreen> {
       await _controller!.initialize();
 
       try {
-        // Reduce camera exposure brightness to prevent overexposed images
-        await _controller!.setExposureOffset(-1.5);
+        // Sedikit saja: offset -1,5 sebelumnya membuat frame live jauh
+        // lebih gelap daripada foto tangkapan, sehingga label mudah
+        // berubah antar-frame dan gerbang kecerahan mudah terpicu.
+        // -0,5 tetap meredam silau tanpa menggelapkan masukan model.
+        await _controller!.setExposureOffset(-0.5);
       } catch (e) {
         debugPrint('Could not set exposure offset: $e');
       }
@@ -181,35 +185,97 @@ class _ScanScreenState extends State<ScanScreen> {
                 final confidence = (result.confidenceScore * 100)
                     .toStringAsFixed(1);
 
+                // Peringatan kecerahan saat membidik: luminansi frame
+                // live dinilai dengan gerbang yang sama seperti foto
+                // tangkapan, supaya pengguna memperbaiki cahaya SEBELUM
+                // memotret, bukan baru tahu sesudahnya di layar hasil.
+                final liveIssues = ScanQuality.evaluate(
+                  confidence: result.confidenceScore,
+                  meanLuminance: result.meanLuminance,
+                );
+                final ScanQualityIssue? brightnessIssue =
+                    liveIssues.contains(ScanQualityIssue.tooDark)
+                    ? ScanQualityIssue.tooDark
+                    : liveIssues.contains(ScanQualityIssue.tooBright)
+                    ? ScanQualityIssue.tooBright
+                    : null;
+
                 return Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.7),
-                      borderRadius: BorderRadius.circular(30),
-                      border: Border.all(color: AppColors.primary, width: 2),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          result.detectedLabel.toUpperCase(),
-                          style: AppTextStyles.title2Bold.copyWith(
-                            color: Colors.white,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.7),
+                          borderRadius: BorderRadius.circular(30),
+                          border: Border.all(
+                            color: AppColors.primary,
+                            width: 2,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'scan.confidence'.tr(args: [confidence]),
-                          style: AppTextStyles.body1Regular.copyWith(
-                            color: Colors.white.withValues(alpha: 0.8),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              result.detectedLabel.toUpperCase(),
+                              style: AppTextStyles.title2Bold.copyWith(
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'scan.confidence'.tr(args: [confidence]),
+                              style: AppTextStyles.body1Regular.copyWith(
+                                color: Colors.white.withValues(alpha: 0.8),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (brightnessIssue != null) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 32),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.75),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.amber, width: 1.5),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                brightnessIssue == ScanQualityIssue.tooDark
+                                    ? Icons.dark_mode
+                                    : Icons.wb_sunny,
+                                color: Colors.amber,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  brightnessIssue == ScanQualityIssue.tooDark
+                                      ? 'scan.quality_too_dark'.tr()
+                                      : 'scan.quality_too_bright'.tr(),
+                                  style: AppTextStyles.body2Regular.copyWith(
+                                    color: Colors.white,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
-                    ),
+                    ],
                   ),
                 );
               },

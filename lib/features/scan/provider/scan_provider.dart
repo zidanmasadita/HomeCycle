@@ -7,6 +7,7 @@ import 'package:homecycle/errors/failure.dart';
 import 'package:homecycle/features/category/provider/category_provider.dart';
 import 'package:homecycle/features/inventory/models/food_item_model.dart';
 import 'package:homecycle/features/inventory/provider/inventory_provider.dart';
+import 'package:homecycle/features/scan/models/scan_quality.dart';
 import 'package:homecycle/features/scan/models/scan_result_model.dart';
 import 'package:homecycle/features/scan/repository/scan_repository.dart';
 
@@ -47,6 +48,8 @@ class ScanProvider extends ChangeNotifier {
 
     try {
       await _tfLiteService.loadModel();
+      _tfLiteService.resetLiveSmoothing();
+      _liveResult = null;
       _status = ScanStatus.success;
     } catch (e) {
       _errorMessage = e.toString();
@@ -67,18 +70,48 @@ class ScanProvider extends ChangeNotifier {
           )
           .firstOrNull;
 
-      _liveResult = result.copyWith(categoryId: category?.id);
+      final updated = result.copyWith(categoryId: category?.id);
+      final previous = _liveResult;
+      final hadError = _errorMessage != null;
+      _liveResult = updated;
       _errorMessage = null;
-      notifyListeners();
+
+      // Beri tahu UI hanya bila yang tampil benar-benar berubah: label
+      // berganti, keyakinan bergerak cukup besar, atau status kecerahan
+      // menyeberang ambang. Rebuild di setiap frame adalah salah satu
+      // sumber tersendatnya layar pindai.
+      final labelChanged = previous?.detectedLabel != updated.detectedLabel;
+      final confidenceChanged =
+          previous == null ||
+          (previous.confidenceScore - updated.confidenceScore).abs() >= 0.02;
+      final brightnessChanged =
+          _brightnessBand(previous?.meanLuminance) !=
+          _brightnessBand(updated.meanLuminance);
+      if (hadError || labelChanged || confidenceChanged || brightnessChanged) {
+        notifyListeners();
+      }
     } catch (e, stacktrace) {
       debugPrint('Live scan error: $e\n$stacktrace');
-      _errorMessage = 'Error: $e';
-      notifyListeners();
+      final message = 'Error: $e';
+      if (_errorMessage != message) {
+        _errorMessage = message;
+        notifyListeners();
+      }
     } finally {
       // Add a cool-down delay to reduce CPU usage and fix lag
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 300));
       _isProcessingFrame = false;
     }
+  }
+
+  /// Pita kecerahan kasar dari luminansi: null (belum ada data), 0 =
+  /// terlalu gelap, 1 = normal, 2 = terlalu terang. Dipakai untuk
+  /// mendeteksi penyeberangan ambang gerbang kecerahan antar-frame.
+  static int? _brightnessBand(double? meanLuminance) {
+    if (meanLuminance == null) return null;
+    if (meanLuminance < ScanQuality.minLuminance) return 0;
+    if (meanLuminance > ScanQuality.maxLuminance) return 2;
+    return 1;
   }
 
   /// Membekukan hasil live sebagai hasil akhir, dilengkapi foto beresolusi
