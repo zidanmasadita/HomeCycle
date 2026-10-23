@@ -68,7 +68,20 @@ class InventoryRepository {
 
   Future<void> updateQuantity(String id, double quantity) async {
     try {
-      await _client.from(_table).update({'quantity': quantity}).eq('id', id);
+      // .select() membuat PostgREST mengembalikan baris yang berubah;
+      // tanpa itu, update yang cocok dengan 0 baris (mis. tertolak
+      // kebijakan RLS) terlihat berhasil padahal tidak mengubah apa pun.
+      final response = await _client
+          .from(_table)
+          .update({'quantity': quantity})
+          .eq('id', id)
+          .select('id');
+      if ((response as List).isEmpty) {
+        throw const Failure(
+          'Tidak ada baris yang berubah saat memperbarui jumlah item. '
+          'Periksa kebijakan akses (RLS) tabel food_items.',
+        );
+      }
     } catch (e) {
       throw Failure.fromException(e);
     }
@@ -76,7 +89,17 @@ class InventoryRepository {
 
   Future<void> updateStatus(String id, String status) async {
     try {
-      await _client.from(_table).update({'actual_status': status}).eq('id', id);
+      final response = await _client
+          .from(_table)
+          .update({'actual_status': status})
+          .eq('id', id)
+          .select('id');
+      if ((response as List).isEmpty) {
+        throw const Failure(
+          'Tidak ada baris yang berubah saat memperbarui status item. '
+          'Periksa kebijakan akses (RLS) tabel food_items.',
+        );
+      }
     } catch (e) {
       throw Failure.fromException(e);
     }

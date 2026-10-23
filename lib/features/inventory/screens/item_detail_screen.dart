@@ -34,77 +34,100 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     if (_isLoading) return;
     setState(() => _isLoading = true);
 
-    try {
-      final inventory = context.read<InventoryProvider>();
-      final consumption = context.read<ConsumptionProvider>();
-      final dashboard = context.read<DashboardProvider>();
-      final gamification = context.read<GamificationProvider>();
+    // Semua provider dan id admin ditangkap di depan, sebelum ada
+    // await atau pop, agar context tidak dipakai setelah widget
+    // dinonaktifkan.
+    final inventory = context.read<InventoryProvider>();
+    final consumption = context.read<ConsumptionProvider>();
+    final dashboard = context.read<DashboardProvider>();
+    final gamification = context.read<GamificationProvider>();
+    final categoryProvider = context.read<CategoryProvider>();
+    final adminId =
+        context.read<HouseholdProvider>().adminId ?? widget.item.userId;
 
+    try {
       final currentItem = inventory.inventory.firstWhere(
         (i) => i.id == widget.item.id,
         orElse: () => widget.item,
       );
 
-      final category = context.read<CategoryProvider>().categories.firstWhere(
-        (c) => c.id == currentItem.categoryId,
+      final category = categoryProvider.categories
+          .where((c) => c.id == currentItem.categoryId)
+          .firstOrNull;
+      if (category == null) {
+        AppHelpers.showError('Kategori item tidak ditemukan, aksi dibatalkan.');
+        return;
+      }
+
+      final itemName = currentItem.customName ?? category.name;
+
+      // Pembaruan dijalankan DULU. Sebelumnya toast sukses tampil
+      // sebelum operasi dan layar ditutup sebelum pekerjaan selesai,
+      // sehingga kegagalan di basis data berakhir tanpa pesan apa pun.
+      final success = await inventory.consumeOrWastePartial(
+        currentItem,
+        action,
+        1.0,
       );
 
+      if (!success) {
+        AppHelpers.showError(
+          inventory.errorMessage ?? 'Gagal memperbarui item. Coba lagi.',
+        );
+        return;
+      }
+
+      final consumedItem = currentItem.copyWith(quantity: 1.0);
+      final logged = await consumption.recordConsumption(
+        item: consumedItem,
+        category: category,
+        action: action,
+      );
+      if (!logged) {
+        AppHelpers.showError(
+          consumption.errorMessage ??
+              'Status item berubah, tetapi catatan konsumsi gagal disimpan.',
+        );
+        return;
+      }
+
+      await dashboard.loadDashboard();
+
+      if (action == 'consumed') {
+        final consumptionRepo = ConsumptionRepository();
+        final streak = await consumptionRepo.getCurrentStreakWeeks(adminId);
+
+        await gamification.checkAndUnlockAchievements(
+          itemsSavedCount: dashboard.impactStats.itemsSaved,
+          currentStreakWeeks: streak,
+          totalCo2Saved: dashboard.impactStats.totalCo2Saved,
+          totalMoneySaved: dashboard.impactStats.totalMoneySaved,
+        );
+
+        if (gamification.newlyUnlocked.isNotEmpty && mounted) {
+          await AchievementUnlockedDialog.showSequentially(
+            context,
+            gamification,
+          );
+        }
+      }
+
+      AppHelpers.showSuccess(
+        action == 'consumed'
+            ? 'inventory.success_consumed'.tr(args: [itemName])
+            : 'inventory.success_wasted'.tr(args: [itemName]),
+      );
+
+      // Layar ditutup terakhir, hanya bila item benar-benar habis.
       if (currentItem.quantity <= 1.0 && mounted) {
         Navigator.pop(context);
       }
-
-
-      AppHelpers.showSuccess(
-        action == 'consumed' 
-          ? 'inventory.success_consumed'.tr(args: [currentItem.customName ?? category.name])
-          : 'inventory.success_wasted'.tr(args: [currentItem.customName ?? category.name]),
-      );
-
-      bool success = false;
-      if (action == 'consumed') {
-        success = await inventory.consumeOrWastePartial(
-          currentItem,
-          'consumed',
-          1.0,
-        );
-      } else {
-        success = await inventory.consumeOrWastePartial(
-          currentItem,
-          'wasted',
-          1.0,
-        );
-      }
-
-      if (success) {
-        final consumedItem = currentItem.copyWith(quantity: 1.0);
-        await consumption.recordConsumption(
-          item: consumedItem,
-          category: category,
-          action: action,
-        );
-
-        await dashboard.loadDashboard();
-
-        if (action == 'consumed') {
-          final consumptionRepo = ConsumptionRepository();
-          final adminId =
-              context.read<HouseholdProvider>().adminId ?? currentItem.userId;
-          final streak = await consumptionRepo.getCurrentStreakWeeks(adminId);
-
-          await gamification.checkAndUnlockAchievements(
-            itemsSavedCount: dashboard.impactStats.itemsSaved,
-            currentStreakWeeks: streak,
-            totalCo2Saved: dashboard.impactStats.totalCo2Saved,
-            totalMoneySaved: dashboard.impactStats.totalMoneySaved,
-          );
-
-          if (gamification.newlyUnlocked.isNotEmpty && mounted) {
-            await AchievementUnlockedDialog.showSequentially(
-              context,
-              gamification,
-            );
-          }
-        }
+    } catch (e) {
+      // Jangan biarkan kegagalan apa pun mati diam-diam: sebelumnya
+      // handler ini hanya punya try-finally, jadi setiap lemparan yang
+      // tidak tertangkap membuat tombol tampak tidak berpengaruh.
+      if (mounted) {
+        AppHelpers.showError('Gagal memproses aksi: $e');
       }
     } finally {
       if (mounted) {
