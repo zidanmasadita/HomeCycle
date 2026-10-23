@@ -120,16 +120,30 @@ class ScanProvider extends ChangeNotifier {
     return 1;
   }
 
-  /// Membekukan hasil live sebagai hasil akhir, dilengkapi foto beresolusi
-  /// penuh dan luminansi foto tersebut untuk gerbang kualitas di layar
-  /// hasil (lihat scan_quality.dart).
+  /// Membekukan hasil live sebagai hasil akhir. Label mentahnya diganti
+  /// penilaian multi-crop atas foto beresolusi penuh (lihat
+  /// ScanCrop.multiFractions), karena hasil inilah yang disimpan dan
+  /// cara itu terukur lebih tepat, terutama bila objek tidak memenuhi
+  /// frame. Bila penilaian foto gagal, perilaku lama dipakai: bekukan
+  /// hasil live dan lengkapi dengan foto + luminansinya.
   Future<void> captureWithQuality(Uint8List imageBytes) async {
-    if (_liveResult != null) {
-      final luminance = _tfLiteService.estimateMeanLuminance(imageBytes);
-      _liveResult = _liveResult!.copyWith(
-        imageBytes: imageBytes,
-        meanLuminance: luminance,
-      );
+    try {
+      final refined = await _tfLiteService.runInferenceMultiCrop(imageBytes);
+      final category = _categoryProvider.categories
+          .where(
+            (c) => c.name.toLowerCase() == refined.detectedLabel.toLowerCase(),
+          )
+          .firstOrNull;
+      _liveResult = refined.copyWith(categoryId: category?.id);
+    } catch (e) {
+      debugPrint('Penilaian multi-crop gagal, pakai hasil live: $e');
+      if (_liveResult != null) {
+        final luminance = _tfLiteService.estimateMeanLuminance(imageBytes);
+        _liveResult = _liveResult!.copyWith(
+          imageBytes: imageBytes,
+          meanLuminance: luminance,
+        );
+      }
     }
     captureLiveResult();
   }
@@ -147,7 +161,7 @@ class ScanProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await _tfLiteService.runInference(imageBytes);
+      final result = await _tfLiteService.runInferenceMultiCrop(imageBytes);
 
       final category = _categoryProvider.categories
           .where(

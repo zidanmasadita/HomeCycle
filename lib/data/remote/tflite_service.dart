@@ -4,6 +4,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:homecycle/features/scan/models/live_prediction_smoother.dart';
+import 'package:homecycle/features/scan/models/scan_crop.dart';
 import 'package:homecycle/features/scan/models/scan_result_model.dart';
 import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
@@ -46,11 +47,12 @@ class IsolateResult {
 
 // Top-level function for Isolate
 IsolateResult _processImageInIsolate(IsolateData data) {
-  // Model hanya memakai crop persegi di tengah frame, jadi hanya area itu
-  // yang dikonversi ke RGB. Mengonversi seluruh frame lalu memotongnya
-  // membuang sebagian besar pekerjaan isolate pada piksel yang tidak
-  // pernah dilihat model.
-  final size = data.width < data.height ? data.width : data.height;
+  // Model hanya memakai persegi tengah frame sebesar ScanCrop.liveFraction
+  // (lihat scan_crop.dart), jadi hanya area itu yang dikonversi ke RGB.
+  // Mengonversi seluruh frame membuang sebagian besar pekerjaan isolate
+  // pada piksel yang tidak pernah dilihat model.
+  final fullSize = data.width < data.height ? data.width : data.height;
+  final size = (fullSize * ScanCrop.liveFraction).round();
   final x0 = (data.width - size) ~/ 2;
   final y0 = (data.height - size) ~/ 2;
 
@@ -202,24 +204,13 @@ class TFLiteService {
     }
   }
 
-  Future<ScanResultModel> runInference(Uint8List imageBytes) async {
-    if (_interpreter == null) {
-      throw Exception('Model belum diinisialisasi');
-    }
-
-    final decoded = img.decodeImage(imageBytes);
-    if (decoded == null) throw Exception('Gagal decode gambar');
-
-    // Terapkan orientasi EXIF: sebagian perangkat menulis JPEG tangkapan
-    // dalam orientasi sensor plus tag EXIF, dan decodeImage tidak
-    // memutarnya otomatis. Tanpa ini foto bisa diklasifikasikan miring.
-    // Bila EXIF normal, bakeOrientation tidak mengubah apa pun.
-    final image = img.bakeOrientation(decoded);
-
-    final size = image.width < image.height ? image.width : image.height;
+  /// Memotong persegi tengah sebesar [fraction] dari sisi terpendek
+  /// gambar, lalu mengubah ukurannya menjadi 224x224 — masukan model.
+  img.Image _squareCropResize(img.Image image, double fraction) {
+    final fullSize = image.width < image.height ? image.width : image.height;
+    final size = (fullSize * fraction).round();
     final x0 = (image.width - size) ~/ 2;
     final y0 = (image.height - size) ~/ 2;
-
     final croppedImage = img.copyCrop(
       image,
       x: x0,
@@ -227,14 +218,17 @@ class TFLiteService {
       width: size,
       height: size,
     );
-
-    final resizedImage = img.copyResize(
+    return img.copyResize(
       croppedImage,
       width: 224,
       height: 224,
       interpolation: img.Interpolation.linear,
     );
+  }
 
+  /// Menjalankan model pada gambar 224x224 dan mengembalikan vektor
+  /// probabilitas semua kelas.
+  List<double> _runModel(img.Image resizedImage) {
     var inputObj = List.generate(
       1,
       (_) => List.generate(
@@ -242,8 +236,7 @@ class TFLiteService {
         (_) => List.generate(224, (_) => List.filled(3, 0.0)),
       ),
     );
-    
-    var pixelIndex = 0;
+
     for (var y = 0; y < 224; y++) {
       for (var x = 0; x < 224; x++) {
         final pixel = resizedImage.getPixel(x, y);
@@ -258,26 +251,98 @@ class TFLiteService {
     var outputObj = List.generate(1, (_) => List.filled(numClasses, 0.0));
     _interpreter!.run(inputObj, outputObj);
 
-    final outputList = outputObj[0];
+    return outputObj[0];
+  }
 
+  /// Membentuk hasil dari vektor probabilitas (argmax + label).
+  ScanResultModel _resultFromProbabilities(
+    List<double> probabilities, {
+    required Uint8List imageBytes,
+    required double? meanLuminance,
+  }) {
     int maxIndex = 0;
-    double maxConfidence = outputList[0];
+    double maxConfidence = probabilities[0];
 
-    for (int i = 1; i < outputList.length; i++) {
-      if (outputList[i] > maxConfidence) {
-        maxConfidence = outputList[i];
+    for (int i = 1; i < probabilities.length; i++) {
+      if (probabilities[i] > maxConfidence) {
+        maxConfidence = probabilities[i];
         maxIndex = i;
       }
     }
 
-    final detectedLabel = maxIndex < _labels.length ? _labels[maxIndex] : 'Unknown';
+    final detectedLabel = maxIndex < _labels.length
+        ? _labels[maxIndex]
+        : 'Unknown';
 
     return ScanResultModel(
       detectedLabel: detectedLabel,
       confidenceScore: maxConfidence,
       condition: 'fresh',
       imageBytes: imageBytes,
+      meanLuminance: meanLuminance,
+    );
+  }
+
+  /// Decode gambar dan terapkan orientasi EXIF-nya. Sebagian perangkat
+  /// menulis JPEG dalam orientasi sensor plus tag EXIF, dan decodeImage
+  /// tidak memutarnya otomatis; tanpa ini foto bisa diklasifikasikan
+  /// miring. Bila EXIF normal, bakeOrientation tidak mengubah apa pun.
+  img.Image _decodeOriented(Uint8List imageBytes) {
+    final decoded = img.decodeImage(imageBytes);
+    if (decoded == null) throw Exception('Gagal decode gambar');
+    return img.bakeOrientation(decoded);
+  }
+
+  Future<ScanResultModel> runInference(Uint8List imageBytes) async {
+    if (_interpreter == null) {
+      throw Exception('Model belum diinisialisasi');
+    }
+
+    final image = _decodeOriented(imageBytes);
+    final resizedImage = _squareCropResize(image, 1.0);
+    final probabilities = _runModel(resizedImage);
+
+    return _resultFromProbabilities(
+      probabilities,
+      imageBytes: imageBytes,
       meanLuminance: _meanLuminance(resizedImage),
+    );
+  }
+
+  /// Seperti [runInference], tetapi probabilitas adalah rata-rata dari
+  /// beberapa crop tengah (lihat ScanCrop.multiFractions), sehingga
+  /// lebih tahan terhadap objek yang tidak memenuhi frame. Luminansi
+  /// tetap dihitung dari crop penuh, konsisten dengan gerbang kualitas.
+  Future<ScanResultModel> runInferenceMultiCrop(Uint8List imageBytes) async {
+    if (_interpreter == null) {
+      throw Exception('Model belum diinisialisasi');
+    }
+
+    final image = _decodeOriented(imageBytes);
+    List<double>? totals;
+    double? luminance;
+    for (final fraction in ScanCrop.multiFractions) {
+      final resizedImage = _squareCropResize(image, fraction);
+      final probabilities = _runModel(resizedImage);
+      if (fraction == 1.0) {
+        luminance = _meanLuminance(resizedImage);
+      }
+      if (totals == null) {
+        totals = List<double>.from(probabilities);
+      } else {
+        for (var i = 0; i < probabilities.length; i++) {
+          totals[i] += probabilities[i];
+        }
+      }
+    }
+
+    final count = ScanCrop.multiFractions.length;
+    final averaged = [for (final v in totals!) v / count];
+
+    return _resultFromProbabilities(
+      averaged,
+      imageBytes: imageBytes,
+      meanLuminance: luminance,
     );
   }
 
