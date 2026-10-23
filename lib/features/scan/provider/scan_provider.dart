@@ -88,6 +88,20 @@ class ScanProvider extends ChangeNotifier {
     }
   }
 
+  /// Membekukan hasil live sebagai hasil akhir, dilengkapi foto beresolusi
+  /// penuh dan luminansi foto tersebut untuk gerbang kualitas di layar
+  /// hasil (lihat scan_quality.dart).
+  Future<void> captureWithQuality(Uint8List imageBytes) async {
+    if (_liveResult != null) {
+      final luminance = _tfLiteService.estimateMeanLuminance(imageBytes);
+      _liveResult = _liveResult!.copyWith(
+        imageBytes: imageBytes,
+        meanLuminance: luminance,
+      );
+    }
+    captureLiveResult();
+  }
+
   void captureLiveResult() {
     if (_liveResult != null) {
       _lastResult = _liveResult;

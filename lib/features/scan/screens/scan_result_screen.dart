@@ -8,6 +8,7 @@ import 'package:homecycle/core/routes/slide_page_route.dart';
 import 'package:homecycle/core/widgets/detail_row_widget.dart';
 import 'package:homecycle/core/widgets/success_animation_screen.dart';
 import 'package:homecycle/features/scan/provider/scan_provider.dart';
+import 'package:homecycle/features/scan/models/scan_quality.dart';
 import 'package:homecycle/features/category/provider/category_provider.dart';
 import 'package:homecycle/features/category/models/category_model.dart';
 import 'package:homecycle/features/household/provider/household_provider.dart';
@@ -26,6 +27,17 @@ class ScanResultScreen extends StatefulWidget {
 class _ScanResultScreenState extends State<ScanResultScreen> {
   double _quantity = 1.0;
   bool _storeInFridge = true;
+
+  String _qualityMessage(ScanQualityIssue issue) {
+    switch (issue) {
+      case ScanQualityIssue.tooDark:
+        return 'scan.quality_too_dark'.tr();
+      case ScanQualityIssue.tooBright:
+        return 'scan.quality_too_bright'.tr();
+      case ScanQualityIssue.lowConfidence:
+        return 'scan.quality_low_confidence'.tr();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +60,13 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
     }
 
     final confidencePercent = (result.confidenceScore * 100).toStringAsFixed(0);
+
+    // Gerbang kualitas (mitigasi kondisi nyata): nilai kecerahan foto dan
+    // keyakinan model, lalu tampilkan peringatan bila ada isu.
+    final qualityIssues = ScanQuality.evaluate(
+      confidence: result.confidenceScore,
+      meanLuminance: result.meanLuminance,
+    );
     final rawName = result.detectedLabel;
     final capitalizedName = rawName.isNotEmpty
         ? '${rawName[0].toUpperCase()}${rawName.substring(1)}'
@@ -108,6 +127,55 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                   ),
                   const SizedBox(height: 24),
 
+                  // Peringatan kualitas pindai (hanya tampil bila ada isu)
+                  if (qualityIssues.isNotEmpty) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.amber.shade700.withValues(alpha: 0.4),
+                        ),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.warning_amber_rounded,
+                            color: Colors.amber.shade800,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'scan.quality_warning_title'.tr(),
+                                  style: AppTextStyles.body2SemiBold.copyWith(
+                                    color: Colors.amber.shade900,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                for (final issue in qualityIssues)
+                                  Text(
+                                    _qualityMessage(issue),
+                                    style: AppTextStyles.label1Regular
+                                        .copyWith(
+                                          color: Colors.amber.shade900,
+                                          height: 1.4,
+                                        ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
                   // Result Details Card
                   Container(
                     padding: const EdgeInsets.all(20),
@@ -137,7 +205,10 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                           icon: Icons.eco,
                           label: 'scan.freshness'.tr(),
                           value: 'scan.fresh_confidence'.tr(args: [confidencePercent]),
-                          color: Colors.green,
+                          color: result.confidenceScore >=
+                                  ScanQuality.minConfidence
+                              ? Colors.green
+                              : Colors.amber.shade800,
                         ),
                         const SizedBox(height: 16),
                         DetailRowWidget(

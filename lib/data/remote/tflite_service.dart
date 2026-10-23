@@ -231,7 +231,52 @@ class TFLiteService {
       confidenceScore: maxConfidence,
       condition: 'fresh',
       imageBytes: imageBytes,
+      meanLuminance: _meanLuminance(resizedImage),
     );
+  }
+
+  /// Luminansi rata-rata (0..1) sebuah gambar yang sudah berukuran 224x224,
+  /// memakai bobot persepsi standar (ITU-R BT.709).
+  static double _meanLuminance(img.Image image) {
+    var sum = 0.0;
+    for (var y = 0; y < image.height; y++) {
+      for (var x = 0; x < image.width; x++) {
+        final pixel = image.getPixel(x, y);
+        sum += 0.2126 * pixel.r + 0.7152 * pixel.g + 0.0722 * pixel.b;
+      }
+    }
+    return sum / (image.width * image.height) / 255.0;
+  }
+
+  /// Menghitung luminansi rata-rata foto pada area tengah yang sama dengan
+  /// area yang diklasifikasikan model (crop persegi tengah). Dipakai untuk
+  /// jalur tangkapan kamera live, yang hasil klasifikasinya berasal dari
+  /// frame stream. Mengembalikan null bila gambar gagal didekode.
+  double? estimateMeanLuminance(Uint8List imageBytes) {
+    try {
+      final image = img.decodeImage(imageBytes);
+      if (image == null) return null;
+
+      final size = image.width < image.height ? image.width : image.height;
+      final x0 = (image.width - size) ~/ 2;
+      final y0 = (image.height - size) ~/ 2;
+      final croppedImage = img.copyCrop(
+        image,
+        x: x0,
+        y: y0,
+        width: size,
+        height: size,
+      );
+      final resizedImage = img.copyResize(
+        croppedImage,
+        width: 224,
+        height: 224,
+        interpolation: img.Interpolation.linear,
+      );
+      return _meanLuminance(resizedImage);
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<ScanResultModel> runInferenceFromCameraImage(CameraImage image) async {

@@ -79,7 +79,12 @@
     "confidence": "Keyakinan: {}%",
     "scan_button": "Pindai Sekarang",
     "result_fresh": "Segar",
-    "result_overripe": "Terlalu Matang"
+    "result_overripe": "Terlalu Matang",
+    "guide_instruction": "Posisikan objek memenuhi bingkai, jangan tertutup tangan atau benda lain, dan pastikan cahaya cukup.",
+    "quality_warning_title": "Hasil pindai perlu diperiksa",
+    "quality_too_dark": "Foto terlalu gelap sehingga hasil bisa tidak akurat. Pindai ulang di tempat yang lebih terang.",
+    "quality_too_bright": "Foto terlalu terang atau silau sehingga hasil bisa tidak akurat. Hindari cahaya langsung yang menyilaukan.",
+    "quality_low_confidence": "Keyakinan model rendah (di bawah 60%). Objek mungkin tertutup, buram, atau mirip kelas lain — periksa labelnya atau pindai ulang."
   },
   "inventory": {
     "title": "Inventaris",

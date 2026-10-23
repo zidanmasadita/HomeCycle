@@ -79,7 +79,12 @@
     "confidence": "Confidence: {}%",
     "scan_button": "Scan Now",
     "result_fresh": "Fresh",
-    "result_overripe": "Overripe"
+    "result_overripe": "Overripe",
+    "guide_instruction": "Fit the object inside the frame, keep it uncovered by hands or other objects, and make sure the lighting is sufficient.",
+    "quality_warning_title": "This scan result needs checking",
+    "quality_too_dark": "The photo is too dark, so the result may be inaccurate. Scan again in a brighter place.",
+    "quality_too_bright": "The photo is too bright or glary, so the result may be inaccurate. Avoid direct glaring light.",
+    "quality_low_confidence": "Model confidence is low (below 60%). The object may be covered, blurry, or similar to another class — check the label or scan again."
   },
   "inventory": {
     "title": "Inventory",

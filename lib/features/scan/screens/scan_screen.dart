@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:provider/provider.dart';
 import 'package:homecycle/features/scan/provider/scan_provider.dart';
+import 'package:homecycle/features/scan/widgets/scan_frame_overlay.dart';
 import 'package:homecycle/routes/app_routes.dart';
 import 'package:homecycle/core/constants/app_colors.dart';
 import 'package:homecycle/core/theme/app_text_styles.dart';
@@ -95,11 +96,9 @@ class _ScanScreenState extends State<ScanScreen> {
       final XFile picture = await _controller!.takePicture();
       final Uint8List imageBytes = await picture.readAsBytes();
 
-      // Update the liveResult with these bytes before capturing
-      scanProvider.setLiveResultImage(imageBytes);
-
-      // Capture the current live result as the final result
-      scanProvider.captureLiveResult();
+      // Bekukan hasil live sebagai hasil akhir, lengkapi dengan foto
+      // beresolusi penuh dan luminansinya untuk gerbang kualitas.
+      await scanProvider.captureWithQuality(imageBytes);
 
       // Close loading dialog and navigate
       if (mounted) {
@@ -141,6 +140,9 @@ class _ScanScreenState extends State<ScanScreen> {
       body: Stack(
         children: [
           SizedBox.expand(child: CameraPreview(_controller!)),
+
+          // Bingkai pemandu: area persegi yang benar-benar diproses model
+          const ScanFrameOverlay(),
 
           // Back button
           Positioned(
