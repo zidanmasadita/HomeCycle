@@ -22,8 +22,13 @@ class FoodImage extends StatelessWidget {
 
   String _getCategoryAssetPath(String iconUrl) {
     if (iconUrl.startsWith('http')) return iconUrl;
-    if (iconUrl.startsWith('assets/')) return iconUrl;
-    return 'assets/images/food-images/$iconUrl';
+    // Nilai icon_url dari database bisa masih berakhiran .png; aset lokal
+    // food-images sudah dikonversi ke WebP (branch development, 23 Okt 2026).
+    final normalized = iconUrl.endsWith('.png')
+        ? '${iconUrl.substring(0, iconUrl.length - 4)}.webp'
+        : iconUrl;
+    if (normalized.startsWith('assets/')) return normalized;
+    return 'assets/images/food-images/$normalized';
   }
 
   @override
@@ -31,7 +36,7 @@ class FoodImage extends StatelessWidget {
     final itemName = (item.customName ?? category?.name ?? '')
         .toLowerCase()
         .replaceAll(' ', '');
-    final nameAsset = 'assets/images/food-images/$itemName.png';
+    final nameAsset = 'assets/images/food-images/$itemName.webp';
 
     return Image.asset(
       nameAsset,

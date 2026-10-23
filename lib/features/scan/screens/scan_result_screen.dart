@@ -99,7 +99,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                               fit: BoxFit.cover,
                             )
                           : Image.asset(
-                              'assets/images/food-images/apple.png',
+                              'assets/images/food-images/apple.webp',
                               height: 180,
                               width: double.infinity,
                               fit: BoxFit.contain,
