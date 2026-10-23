@@ -7,10 +7,11 @@ class ScanResultModel {
   final Uint8List? imageBytes;
   final String? categoryId;
 
-  /// Luminansi rata-rata (0..1) foto yang dipindai, dihitung dari area
-  /// tengah yang sama dengan yang diklasifikasikan model. Dipakai oleh
-  /// gerbang kecerahan (lihat scan_quality.dart). Null bila tidak tersedia,
-  /// mis. pada hasil live dari frame kamera.
+  /// Luminansi rata-rata (0..1) gambar yang diklasifikasikan, dihitung
+  /// dari area tengah yang sama dengan yang dilihat model. Dipakai oleh
+  /// gerbang kecerahan (lihat scan_quality.dart). Pada hasil live, nilai
+  /// ini berasal dari frame kamera; pada hasil tangkapan, dari fotonya.
+  /// Null bila tidak tersedia.
   final double? meanLuminance;
 
   const ScanResultModel({
