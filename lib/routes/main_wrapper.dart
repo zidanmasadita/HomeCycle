@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:homecycle/features/dashboard/screens/dashboard_screen.dart';
 import 'package:homecycle/features/inventory/screens/inventory_screen.dart';
 import 'package:homecycle/features/gamification/screens/impact_dashboard_screen.dart';
-import 'package:homecycle/features/recipe_rescue.dart/screens/profile_screen.dart';
+import 'package:homecycle/features/profile/screens/profile_screen.dart';
 import 'package:homecycle/routes/app_routes.dart';
 import 'package:homecycle/widgets/custom_bottom_navbar.dart';
 
