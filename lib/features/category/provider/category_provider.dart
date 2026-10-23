@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:homesikil/errors/failure.dart';
-import 'package:homesikil/features/category/models/category_model.dart';
-import 'package:homesikil/features/category/repository/category_repository.dart';
+import 'package:homecycle/errors/failure.dart';
+import 'package:homecycle/features/category/models/category_model.dart';
+import 'package:homecycle/features/category/repository/category_repository.dart';
 
 enum CategoryStatus { initial, loading, loaded, error }
 

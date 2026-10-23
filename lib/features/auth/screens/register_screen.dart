@@ -1,16 +1,16 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:homesikil/core/routes/slide_page_route.dart';
+import 'package:homecycle/core/routes/slide_page_route.dart';
 import 'package:provider/provider.dart';
-import 'package:homesikil/core/constants/app_colors.dart';
-import 'package:homesikil/core/constants/app_assets.dart';
-import 'package:homesikil/core/constants/app_dimens.dart';
-import 'package:homesikil/core/theme/app_text_styles.dart';
-import 'package:homesikil/core/utils/app_helpers.dart';
-import 'package:homesikil/core/utils/validators.dart';
-import 'package:homesikil/features/auth/provider/auth_provider.dart';
+import 'package:homecycle/core/constants/app_colors.dart';
+import 'package:homecycle/core/constants/app_assets.dart';
+import 'package:homecycle/core/constants/app_dimens.dart';
+import 'package:homecycle/core/theme/app_text_styles.dart';
+import 'package:homecycle/core/utils/app_helpers.dart';
+import 'package:homecycle/core/utils/validators.dart';
+import 'package:homecycle/features/auth/provider/auth_provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:homesikil/routes/app_routes.dart';
+import 'package:homecycle/routes/app_routes.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'login_screen.dart';
 

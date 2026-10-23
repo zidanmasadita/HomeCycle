@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:homesikil/core/utils/impact_calculator.dart';
-import 'package:homesikil/core/utils/unit_converter.dart';
-import 'package:homesikil/data/remote/supabase_service.dart';
-import 'package:homesikil/errors/failure.dart';
-import 'package:homesikil/features/category/models/category_model.dart';
-import 'package:homesikil/features/consumption/models/consumption_log_model.dart';
-import 'package:homesikil/features/consumption/repository/consumption_repository.dart';
-import 'package:homesikil/features/inventory/models/food_item_model.dart';
+import 'package:homecycle/core/utils/impact_calculator.dart';
+import 'package:homecycle/core/utils/unit_converter.dart';
+import 'package:homecycle/data/remote/supabase_service.dart';
+import 'package:homecycle/errors/failure.dart';
+import 'package:homecycle/features/category/models/category_model.dart';
+import 'package:homecycle/features/consumption/models/consumption_log_model.dart';
+import 'package:homecycle/features/consumption/repository/consumption_repository.dart';
+import 'package:homecycle/features/inventory/models/food_item_model.dart';
 
 enum ConsumptionStatus { initial, loading, success, error }
 

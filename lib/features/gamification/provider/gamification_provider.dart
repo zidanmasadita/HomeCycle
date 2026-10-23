@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:homesikil/features/gamification/models/achievement_model.dart';
-import 'package:homesikil/features/gamification/models/impact_stats_model.dart';
-import 'package:homesikil/features/gamification/repository/gamification_repository.dart';
-import 'package:homesikil/features/consumption/repository/consumption_repository.dart';
+import 'package:homecycle/features/gamification/models/achievement_model.dart';
+import 'package:homecycle/features/gamification/models/impact_stats_model.dart';
+import 'package:homecycle/features/gamification/repository/gamification_repository.dart';
+import 'package:homecycle/features/consumption/repository/consumption_repository.dart';
 
 enum GamificationStatus { initial, loading, success, error }
 

@@ -2,13 +2,13 @@ import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:homesikil/data/remote/tflite_service.dart';
-import 'package:homesikil/errors/failure.dart';
-import 'package:homesikil/features/category/provider/category_provider.dart';
-import 'package:homesikil/features/inventory/models/food_item_model.dart';
-import 'package:homesikil/features/inventory/provider/inventory_provider.dart';
-import 'package:homesikil/features/scan/models/scan_result_model.dart';
-import 'package:homesikil/features/scan/repository/scan_repository.dart';
+import 'package:homecycle/data/remote/tflite_service.dart';
+import 'package:homecycle/errors/failure.dart';
+import 'package:homecycle/features/category/provider/category_provider.dart';
+import 'package:homecycle/features/inventory/models/food_item_model.dart';
+import 'package:homecycle/features/inventory/provider/inventory_provider.dart';
+import 'package:homecycle/features/scan/models/scan_result_model.dart';
+import 'package:homecycle/features/scan/repository/scan_repository.dart';
 
 enum ScanStatus { initial, loading, success, error }
 

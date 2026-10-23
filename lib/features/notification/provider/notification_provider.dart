@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:homesikil/features/notification/models/notification_model.dart';
-import 'package:homesikil/features/notification/repository/notification_repository.dart';
+import 'package:homecycle/features/notification/models/notification_model.dart';
+import 'package:homecycle/features/notification/repository/notification_repository.dart';
 
 enum NotificationStatus { initial, loading, success, error }
 

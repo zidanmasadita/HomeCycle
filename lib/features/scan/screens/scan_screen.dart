@@ -2,10 +2,10 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:provider/provider.dart';
-import 'package:homesikil/features/scan/provider/scan_provider.dart';
-import 'package:homesikil/routes/app_routes.dart';
-import 'package:homesikil/core/constants/app_colors.dart';
-import 'package:homesikil/core/theme/app_text_styles.dart';
+import 'package:homecycle/features/scan/provider/scan_provider.dart';
+import 'package:homecycle/routes/app_routes.dart';
+import 'package:homecycle/core/constants/app_colors.dart';
+import 'package:homecycle/core/theme/app_text_styles.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 class ScanScreen extends StatefulWidget {

@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:homesikil/errors/failure.dart';
-import 'package:homesikil/features/auth/models/user_model.dart';
-import 'package:homesikil/features/auth/repository/auth_repository.dart';
-import 'package:homesikil/features/notification/services/fcm_service.dart';
+import 'package:homecycle/errors/failure.dart';
+import 'package:homecycle/features/auth/models/user_model.dart';
+import 'package:homecycle/features/auth/repository/auth_repository.dart';
+import 'package:homecycle/features/notification/services/fcm_service.dart';
 
 enum AuthStatus { initial, loading, success, error }
 

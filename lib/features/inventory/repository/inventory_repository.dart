@@ -1,6 +1,6 @@
-import 'package:homesikil/data/remote/supabase_service.dart';
-import 'package:homesikil/errors/failure.dart';
-import 'package:homesikil/features/inventory/models/food_item_model.dart';
+import 'package:homecycle/data/remote/supabase_service.dart';
+import 'package:homecycle/errors/failure.dart';
+import 'package:homecycle/features/inventory/models/food_item_model.dart';
 
 class InventoryRepository {
   final _client = SupabaseService.client;

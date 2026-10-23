@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:homesikil/features/auth/provider/auth_provider.dart';
-import 'package:homesikil/features/inventory/provider/inventory_provider.dart';
-import 'package:homesikil/features/gamification/provider/gamification_provider.dart';
-import 'package:homesikil/features/category/provider/category_provider.dart';
-import 'package:homesikil/features/notification/provider/notification_provider.dart';
-import 'package:homesikil/features/profile/provider/profile_provider.dart';
-import 'package:homesikil/features/household/provider/household_provider.dart';
-import 'package:homesikil/routes/app_routes.dart';
+import 'package:homecycle/features/auth/provider/auth_provider.dart';
+import 'package:homecycle/features/inventory/provider/inventory_provider.dart';
+import 'package:homecycle/features/gamification/provider/gamification_provider.dart';
+import 'package:homecycle/features/category/provider/category_provider.dart';
+import 'package:homecycle/features/notification/provider/notification_provider.dart';
+import 'package:homecycle/features/profile/provider/profile_provider.dart';
+import 'package:homecycle/features/household/provider/household_provider.dart';
+import 'package:homecycle/routes/app_routes.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

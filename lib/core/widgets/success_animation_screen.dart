@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:homesikil/core/theme/app_text_styles.dart';
-import 'package:homesikil/core/constants/app_colors.dart';
+import 'package:homecycle/core/theme/app_text_styles.dart';
+import 'package:homecycle/core/constants/app_colors.dart';
 
 /// Screen untuk menampilkan animasi sukses menggunakan Lottie.
 ///

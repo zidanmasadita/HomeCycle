@@ -3,7 +3,7 @@
 // saja di dalam aplikasi HomeSikil.
 //
 // Cara import di file lain:
-//   import 'package:homesikil/core/utils/app_helpers.dart';
+//   import 'package:homecycle/core/utils/app_helpers.dart';
 //
 // Kemudian panggil langsung:
 //   AppHelpers.formatDate(someDateTime)
@@ -15,14 +15,14 @@ library app_helpers;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:homesikil/core/utils/custom_response.dart';
+import 'package:homecycle/core/utils/custom_response.dart';
 
-export 'package:homesikil/core/utils/custom_response.dart';
-export 'package:homesikil/core/utils/validators.dart';
-export 'package:homesikil/core/utils/action_throttler.dart';
-export 'package:homesikil/core/utils/impact_calculator.dart';
-export 'package:homesikil/core/utils/unit_converter.dart';
-export 'package:homesikil/core/utils/local_notification_helper.dart';
+export 'package:homecycle/core/utils/custom_response.dart';
+export 'package:homecycle/core/utils/validators.dart';
+export 'package:homecycle/core/utils/action_throttler.dart';
+export 'package:homecycle/core/utils/impact_calculator.dart';
+export 'package:homecycle/core/utils/unit_converter.dart';
+export 'package:homecycle/core/utils/local_notification_helper.dart';
 
 // ─── AppHelpers ───────────────────────────────────────────────────────────────
 class AppHelpers {

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:homesikil/core/constants/app_colors.dart';
-import 'package:homesikil/core/theme/app_text_styles.dart';
-import 'package:homesikil/routes/app_routes.dart';
-import 'package:homesikil/features/notification/models/notification_model.dart';
-import 'package:homesikil/features/notification/provider/notification_provider.dart';
-import 'package:homesikil/features/inventory/provider/inventory_provider.dart';
+import 'package:homecycle/core/constants/app_colors.dart';
+import 'package:homecycle/core/theme/app_text_styles.dart';
+import 'package:homecycle/routes/app_routes.dart';
+import 'package:homecycle/features/notification/models/notification_model.dart';
+import 'package:homecycle/features/notification/provider/notification_provider.dart';
+import 'package:homecycle/features/inventory/provider/inventory_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
 

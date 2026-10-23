@@ -1,7 +1,7 @@
 import 'dart:typed_data';
-import 'package:homesikil/data/remote/supabase_service.dart';
-import 'package:homesikil/errors/failure.dart';
-import 'package:homesikil/features/scan/models/scan_result_model.dart';
+import 'package:homecycle/data/remote/supabase_service.dart';
+import 'package:homecycle/errors/failure.dart';
+import 'package:homecycle/features/scan/models/scan_result_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ScanRepository {

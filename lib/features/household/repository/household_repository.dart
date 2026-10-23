@@ -1,7 +1,7 @@
-import 'package:homesikil/data/remote/supabase_service.dart';
-import 'package:homesikil/errors/failure.dart';
-import 'package:homesikil/features/household/models/household_member_model.dart';
-import 'package:homesikil/features/household/models/household_invitation_model.dart';
+import 'package:homecycle/data/remote/supabase_service.dart';
+import 'package:homecycle/errors/failure.dart';
+import 'package:homecycle/features/household/models/household_member_model.dart';
+import 'package:homecycle/features/household/models/household_invitation_model.dart';
 
 class HouseholdRepository {
   final _client = SupabaseService.client;

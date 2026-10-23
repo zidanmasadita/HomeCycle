@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:homesikil/features/profile/models/user_preference_model.dart';
-import 'package:homesikil/features/profile/repository/profile_repository.dart';
+import 'package:homecycle/features/profile/models/user_preference_model.dart';
+import 'package:homecycle/features/profile/repository/profile_repository.dart';
 
 enum ProfileStatus { initial, loading, success, error }
 

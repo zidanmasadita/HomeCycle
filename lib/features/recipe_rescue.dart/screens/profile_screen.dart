@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:homesikil/core/constants/app_dimens.dart';
-import 'package:homesikil/core/theme/app_text_styles.dart';
-import 'package:homesikil/routes/app_routes.dart';
-import 'package:homesikil/features/recipe_rescue.dart/widgets/profile_header_card.dart';
-import 'package:homesikil/features/recipe_rescue.dart/widgets/profile_menu_card.dart';
-import 'package:homesikil/features/auth/provider/auth_provider.dart';
-import 'package:homesikil/features/household/provider/household_provider.dart';
+import 'package:homecycle/core/constants/app_dimens.dart';
+import 'package:homecycle/core/theme/app_text_styles.dart';
+import 'package:homecycle/routes/app_routes.dart';
+import 'package:homecycle/features/recipe_rescue.dart/widgets/profile_header_card.dart';
+import 'package:homecycle/features/recipe_rescue.dart/widgets/profile_menu_card.dart';
+import 'package:homecycle/features/auth/provider/auth_provider.dart';
+import 'package:homecycle/features/household/provider/household_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:homesikil/features/dashboard/models/impact_stats_model.dart';
-import 'package:homesikil/features/dashboard/repository/dashboard_repository.dart';
+import 'package:homecycle/features/dashboard/models/impact_stats_model.dart';
+import 'package:homecycle/features/dashboard/repository/dashboard_repository.dart';
 
 enum DashboardStatus { initial, loading, success, error }
 

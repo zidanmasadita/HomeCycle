@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:homesikil/errors/failure.dart';
-import 'package:homesikil/features/inventory/models/food_item_model.dart';
-import 'package:homesikil/features/inventory/repository/inventory_repository.dart';
+import 'package:homecycle/errors/failure.dart';
+import 'package:homecycle/features/inventory/models/food_item_model.dart';
+import 'package:homecycle/features/inventory/repository/inventory_repository.dart';
 
 enum InventoryStatus { initial, loading, loaded, error }
 

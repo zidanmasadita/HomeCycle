@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:homesikil/core/theme/app_text_styles.dart';
-import 'package:homesikil/core/constants/app_dimens.dart';
-import 'package:homesikil/features/notification/widgets/notification_card.dart';
-import 'package:homesikil/features/notification/provider/notification_provider.dart';
+import 'package:homecycle/core/theme/app_text_styles.dart';
+import 'package:homecycle/core/constants/app_dimens.dart';
+import 'package:homecycle/features/notification/widgets/notification_card.dart';
+import 'package:homecycle/features/notification/provider/notification_provider.dart';
 import 'package:provider/provider.dart';
 
 class NotificationScreen extends StatelessWidget {

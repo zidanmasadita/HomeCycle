@@ -1,5 +1,5 @@
-name: homesikil
-description: "A new Flutter project."
+name: homecycle
+description: "HomeCycle - aplikasi pendeteksi buah dan sayur berbasis MobileNetV2 (TensorFlow Lite) untuk memantau masa simpan, mengelola inventaris pangan rumah tangga, dan mengurangi limbah makanan."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -88,4 +88,7 @@ flutter:
   # see https://flutter.dev/to/font-from-package
 
 dependency_overrides:
+  # Ditambal ke 2.3.2 untuk kompatibilitas dependensi saat ini.
+  # Tinjau ulang (dan hapus bila sudah tidak perlu) setiap kali
+  # memperbarui Flutter SDK atau dependensi utama.
   path_provider_foundation: 2.3.2

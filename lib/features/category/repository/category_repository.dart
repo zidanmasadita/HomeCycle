@@ -1,6 +1,6 @@
-import 'package:homesikil/data/remote/supabase_service.dart';
-import 'package:homesikil/errors/failure.dart';
-import 'package:homesikil/features/category/models/category_model.dart';
+import 'package:homecycle/data/remote/supabase_service.dart';
+import 'package:homecycle/errors/failure.dart';
+import 'package:homecycle/features/category/models/category_model.dart';
 
 class CategoryRepository {
   final _client = SupabaseService.client;

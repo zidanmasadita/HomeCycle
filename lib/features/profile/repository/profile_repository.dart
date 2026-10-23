@@ -1,6 +1,6 @@
-import 'package:homesikil/data/remote/supabase_service.dart';
-import 'package:homesikil/errors/failure.dart';
-import 'package:homesikil/features/profile/models/user_preference_model.dart';
+import 'package:homecycle/data/remote/supabase_service.dart';
+import 'package:homecycle/errors/failure.dart';
+import 'package:homecycle/features/profile/models/user_preference_model.dart';
 
 class ProfileRepository {
   final _client = SupabaseService.client;

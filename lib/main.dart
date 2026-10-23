@@ -34,8 +34,8 @@ import 'features/gamification/provider/gamification_provider.dart';
 import 'features/profile/provider/profile_provider.dart';
 import 'features/household/provider/household_provider.dart';
 
-import 'package:homesikil/core/utils/app_snackbar.dart';
-import 'package:homesikil/core/utils/custom_response.dart';
+import 'package:homecycle/core/utils/app_snackbar.dart';
+import 'package:homecycle/core/utils/custom_response.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {

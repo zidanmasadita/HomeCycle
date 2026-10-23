@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:homesikil/core/theme/app_text_styles.dart';
+import 'package:homecycle/core/theme/app_text_styles.dart';
 
 class ExpiryBadge extends StatelessWidget {
   final String status;

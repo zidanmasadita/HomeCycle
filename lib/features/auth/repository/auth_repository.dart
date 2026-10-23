@@ -1,7 +1,7 @@
 import 'dart:io';
-import 'package:homesikil/data/remote/supabase_service.dart';
-import 'package:homesikil/errors/failure.dart';
-import 'package:homesikil/features/auth/models/user_model.dart';
+import 'package:homecycle/data/remote/supabase_service.dart';
+import 'package:homecycle/errors/failure.dart';
+import 'package:homecycle/features/auth/models/user_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthRepository {

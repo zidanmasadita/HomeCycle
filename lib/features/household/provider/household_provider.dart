@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:homesikil/features/household/models/household_member_model.dart';
-import 'package:homesikil/features/household/models/household_invitation_model.dart';
-import 'package:homesikil/features/household/repository/household_repository.dart';
+import 'package:homecycle/features/household/models/household_member_model.dart';
+import 'package:homecycle/features/household/models/household_invitation_model.dart';
+import 'package:homecycle/features/household/repository/household_repository.dart';
 
 enum HouseholdStatus { initial, loading, success, error }
 
