@@ -81,13 +81,6 @@ class ScanProvider extends ChangeNotifier {
     }
   }
 
-  void setLiveResultImage(Uint8List bytes) {
-    if (_liveResult != null) {
-      _liveResult = _liveResult!.copyWith(imageBytes: bytes);
-      notifyListeners();
-    }
-  }
-
   /// Membekukan hasil live sebagai hasil akhir, dilengkapi foto beresolusi
   /// penuh dan luminansi foto tersebut untuk gerbang kualitas di layar
   /// hasil (lihat scan_quality.dart).
